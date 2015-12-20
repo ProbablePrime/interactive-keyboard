@@ -1,0 +1,13 @@
+{
+    "beam": {
+        "username": "username",
+        "password": "password",
+        "channel": "channelid"
+    },
+    "threshold":0.5,
+    "auth": {
+        "user": "username",
+        "pass": "password"
+    },
+    "api":"https://beam.pro/api/v1"
+}
