@@ -111,4 +111,4 @@ A partial list of games in the collection:
 * Vectorman™
 * Virtua Fighter™ 2
 
-[controls]: http://i.ahref.co.uk/u/r/bh7h.png
+[controls]: http://i.ahref.co.uk/u/r/LW5B.png
