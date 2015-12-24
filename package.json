@@ -1,18 +1,18 @@
 {
-  "name": "beam-isaac",
+  "name": "beam-segacollection",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Richard Fox",
+  "license": "GPL",
   "dependencies": {
-    "beam-client-node": "0.0.2",
+    "beam-client-node": "git+https://github.com/rfox90/beam-client-node.git#6c4cf41d2569dc499e3c4febc71b055b31fc966a",
     "beam-interactive-node": "0.0.2",
     "bluebird": "^3.1.1",
-    "keycode": "^2.1.0",
-    "robotjs": "^0.3.6"
+    "kbm-robot": "0.0.3",
+    "keycode": "^2.1.0"
   }
 }

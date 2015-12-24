@@ -1,23 +1,86 @@
 var Beam = require('beam-client-node');
 var Tetris = require('beam-interactive-node');
-var rjs = require('robotjs');
+
+//Lets us control the keyboard and mouse of the computer
+var robot = require("kbm-robot");
+
+//Transforms codes(65) into key names(A) and visa versa
 var keycode = require('keycode');
 
+//kbm robot uses a background jar file to handle key events this starts it.
+robot.startJar();
+
+//Load the config values in from the json
 var config = require('./config/default.json');
 
-var stream = parseInt(config.beam.channel,10);
+if(!config) {
+    console.log('Missing config file cannot proceed, Please create a config file. Check the readme for help!');
+    process.exit();
+}
+
+var stream = 0;
+try {
+    stream = parseInt(config.beam.channel,10);
+} catch (e) {
+    console.log('Channel must be your Numeric channel id and NOT the channel name. Check the readme to see how to get this.');
+}
+
+function validateConfig() {
+    var needed = ["channel","password","username"];
+    needed.forEach(function(value){
+        if(!config.beam[value]) {
+            console.error("Missing "+value+ "in your config file. Please add it to the file. Check the readme if you are unsure!");
+        }
+    });
+}
+validateConfig();
+
+//My onscreen controls are likely to be controls a player(streamer) might use if they don't have a gamepad.
+//So we remap keys from the report to lesser used keys here. Ideally id like to emulate a HID and pass beam events through that.
+//That way the streamer can type in chat without 123129301293120392 appearing. However the interface allows you to toggle interactive mode
+//and the streamer has a microphone too!
+var remap = {
+    'W':'1',
+    'S':'2',
+    'A':'3',
+    'D':'4',
+    'J':'5',
+    'K':'6',
+    'L':'7',
+    'I':'8'
+};
+
+function remapKey(code) {
+    var stringCode;
+    if(typeof code === 'number') {
+        stringCode = keycode(code).toUpperCase();
+    } else {
+        stringCode = code;
+    }
+
+     if(remap[stringCode]) {
+        return remap[stringCode].toLowerCase();
+    }
+    return code;
+}
+
 var username = config.beam.username
 var password = config.beam.password;
 
-//50% of users must be pushing a button down for it to be pushed here
-var tactileThreshold = config.beam.threshold;
+//50% of users must be voting on an action for it to happen
+var tactileThreshold = config.threshold || 0.5;
 
 var beam = new Beam();
 
-beam.setUrl('api',config.api);
-beam.setExtraRequestArguments({
-    auth: config.auth
-});
+if (config.api) {
+    beam.setUrl('api',config.api);
+}
+
+if (config.auth) {
+    beam.setExtraRequestArguments({
+        auth: config.auth
+    });
+}
 beam.use('password', {
     username: username,
     password: password
@@ -29,177 +92,130 @@ beam.use('password', {
     details.channel = stream;
     var robot = new Tetris.Robot(details);
     robot.handshake(function(err){
-        //This callback has to be here atm
         if(err) {
+            console.log('Theres a problem connecting to beam, show this to a codey person');
             throw err;
         } else {
-            console.log('connected');
+            console.log('Connected to Beam');
         }
     });
 
     robot.on('report',handleReport);
 });
 
+var recievingReports = true;
+
+/**
+ * Our report handler, entry point for data from beam
+ * @param  {Object} report 
+ */
 function handleReport(report) {
     //if no users are playing or there's a brief absence of activity
-    //the reports contain no data in the arrays. So we detect if there's data
+    //the reports contain no data in the tactile/joystick array. So we detect if there's data
     //before attempting to process it
-    if(report.joystick.length) {
-        handleJoyStick(report.joystick);
-    }
-
     if(report.tactile.length) {
-        handleTactile(report.tactile);
+        recievingReports = true;
+        handleTactile(report.tactile,report.quorum);
+    } else {
+        recievingReports = false;
     }
 }
 
-//My onscreen controls are WASD for firing and the joystick for walking. They felt more natural for me
-//as a viewer as the joystick screams movement. But we can't send WASD because that will double our movement inputs
-//
-//So heres a small mapping table that redirects incoming wasd to the arrow keys
-var remap = {
-    87:38,
-    83:40,
-    64:37,
-    68:39
+/**
+ * Watchdog gets called every 500ms to check the status of the reports coming into us from beam.
+ * If we havent had any reports that contained usable data in (5 * 500ms)(2.5s) we clear all the
+ * inputs that the game uses. This allows the second "player"(controlled by beam to not continue).
+ * Stopping and standing still seemed to be better than "CONTINUE RUNNING YAY"
+ * @return {[type]} [description]
+ */
+function watchDog() {
+    if(!recievingReports) {
+        if(dogCount === 5) {
+            console.log('clearing player input due to lack of reports.');
+            setKeys(['W','S','A','D','I','J','K','L'],false,true);
+        }
+        dogCount =dogCount + 1;
+    } else {
+        dogCount = 0;
+    }
 }
 
+setInterval(watchDog,500);
+
+/**
+ * Given a report, workout what should happen to the key.
+ * @param  {Object} keyObj Directly from the report.tactile array
+ * @return {Boolean} true to push AND HOLD the button, false to let go. null to do nothing.
+ */
+function tactileDecisionMaker(keyObj) {
+    //Using similar processing to Matt's Eurotruck
+    if(keyObj.down.mean > tactileThreshold) {
+        return true;
+    } else if(keyObj.up.mean > tactileThreshold) {
+        return false;
+    }
+    return null;
+}
+
+
+/**
+ * Workout for each key if it should be pushed or unpushed according to the report.
+ * @param {[type]} keyObj [description]
+ */
 function setKeyState(keyObj) {
-    if(remap[keyObj.code]) {
-        keyObj.code = remap[keyObj.code];
-    }
-    //Sometimes the key object will be blank check for that here
-    if(keyObj.down) {
-        //If the down mean is >= to the threshold(50%) push the key down and leave it there
-        if(keyObj.down.mean >= tactileThreshold) {
-            setKey(keyObj.code, true);
-        //else if the up mean is >= to the threshold(50%) release the key and leave it there
-        } else if(keyObj.up.mean >= tactileThreshold) {
+    //Use the remapping table from above to map keys around
+   keyObj.code = remapKey(keyObj.code);
+    //Sometimes the key object will be blank and have no data in .down or .up.
+    //If this occurs we set the key to be up as we don't have enough data
+    if(!keyObj.down) {
+        if(keyObj.code) {
             setKey(keyObj.code,false);
         }
+        return;
+    }
+    var decision = tactileDecisionMaker(keyObj);
+    if(decision !== null) {
+        setKey(keyObj.code, decision);
     }
 }
 
 function handleTactile(tactile) {
-    tactile = tactile.forEach(setKeyState);
+    tactile.forEach(setKeyState);
 }
 
-
-//Here we want to take the 2 Axis joystick data and convert it into keycodes.
-function handleJoyStick(joystick) {
-    //Start with a default of 0,0 because there might only be activity on one axis
-    var coords = {x:0,y:0};
-
-    //Joystick is an array of axises(axii?) that contain info from your control config
-    //For isaac we collect the MEAN(Average) of the X and Y.
-    //
-    //This averages w all the users inputs into a value between -1 and 1. 
-    //Where 1 is the positive side of each axis. For X this is d and for Y this
-    //is w.
-    //e.g.
-    //For X:
-    //  1 = d
-    //  -1 = a
-    //For Y:
-    //  1 = w
-    //  -1 = s
-    joystick.forEach(
-        function(stick) {
-            if(!stick) {
-                return;
-            }
-            //X is reported as axis 0, y is axis 1
-            var axis = 'x';
-            if(stick.axis !== 0) {
-                axis = 'y';
-            }
-            coords[axis] = stick.info.mean;
-        }
-    );
-
-    //Now we have two values x and y in their simplest form.
-    //Ideally I'd like to output these values through some sort of gamepad emulator that acts
-    //like a pad is connected but allows us to simulate inputs on it
-    //
-    //A brief look through NPM only found modules to read values from gamepads, we need to pretend
-    //to be one and output the data.
-    //
-    //So instead we need to take these two coordinates and map them to keypresses.
-    //
-    //For ISAAC WASD is movement and the arrow keys are to fire. 
-    //
-    //To get this from the two values above we can use atan2 as x and y are actually a vector of how far away
-    //the joystick is from 0,0
-    //We convert this to degrees because radians make my head hurt
-    var rotation = Math.atan2(coords.x,coords.y) * 180 / Math.PI;
-
-    //Now we need to constrain that angle to the closest angle of a circle that represents a compas direction
-    //
-    //We need 8 way movement ISAAC can move diagonally.
-    var division = 360 / 8;
-
-    //Then we get the constrained angle
-    var resolvedAngle = Math.round(rotation / division) * division;
-
-    //As its relative to the centre we get negative angles when down or left are involved
-    //so if we add 180 to the absolute value we get the other half of the circle, 180 - 360
-    if(resolvedAngle < 0) {
-        resolvedAngle = Math.abs(resolvedAngle) + 180;
+/**
+ * Convinience function that loops through an array of keys and sets them to status
+ * @param {String[]|Number[]} keys   Keys to modify
+ * @param {Boolean} status status true to push AND HOLD the button, false to let go. null to do nothing.
+ * @param {Boolean} remap  True to also run the keys through the remapping routine.
+ */
+function setKeys(keys,status,remap) {
+    if(remap) {
+        keys = keys.map(remapKey);
     }
-    //Treat 360 as 0 just for convinience
-    if(resolvedAngle == 360) {
-        resolvedAngle = 0;
-    }
-
-    //Now we have an angle between 0 and 360 that we can easily map to a compass direction.
-    //90 - east
-    //180 - south
-    //45 - north east
-    //
-    //Substituting in wasd for NSEW we get:
-    var table = {
-        0:['w'],
-        45:['w','d'],
-        90:['d'],
-        135:['d','s'],
-        180:['s'],
-        225:['s','a'],
-        270:['a'],
-        315:['w','a']
-    }
-
-    //Then to get a list of keys to push we simply access out table, I threw
-    //a missing check around this just incase my maths borks but I haven't seen it do this
-    var keysToPush = [];
-    if(table[resolvedAngle]) {
-        keysToPush = table[resolvedAngle];
-    }
-
-    //Unset WASD so they are up(false) so that we start with a blank slate
-    setKeys(['w','a','s','d'], false);
-
-    //Now set the retrieved keys to true(down)
-    setKeys(keysToPush, true);
-
-    //Done
-}
-
-function setKeys(keys,status) {
     keys.forEach(function(key) {
         setKey(key,status);
     });
 }
 
+/**
+ * Given a key and a boolean push or release that button on the keyboard
+ * @param {Number|String} key
+ * @param {Boolean} status true to push AND HOLD the button, false to let go. null to do nothing.
+ */
 function setKey(key,status) {
-    //Tetris reports back keycodes, convert them to keynames, which robotjs accepts
+    //Beam reports back keycodes, convert them to keynames, which our robot understands
     if(typeof key === 'number') {
         key = keycode(key);
     }
-    console.log(key,status);
-    //Robotjs wants 'down' or 'up', I prefer true or false
-    //handle that here
+    //Our robot library is meant to be used for sequences of actions, everytime we do something
+    //we have to call .go to finish the chain;
+    if(status) {
+        robot.press(key).go();
+    } else {
+        robot.release(key).go();
+    }
+    //Rebound for status reporting
     status = (status) ? 'down' : 'up';
-
-    
-    rjs.keyToggle(key, status)
+    console.log(key,status);
 }
