@@ -36,6 +36,7 @@ Click assign controller mapping and set it up like this:
 Setup Player one however you like.
 
 Set player two to custom keyboard:
+
 ![Custom Keyboard](http://i.ahref.co.uk/u/r/QlSx.png)
 
 Click assign controller mapping and set it up like this:
