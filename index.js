@@ -101,6 +101,8 @@ beam.use('password', {
     });
 
     robot.on('report',handleReport);
+}).catch(function(err){
+    console.log(err);
 });
 
 var recievingReports = true;
@@ -148,6 +150,10 @@ setInterval(watchDog,500);
  * @return {Boolean} true to push AND HOLD the button, false to let go. null to do nothing.
  */
 function tactileDecisionMaker(keyObj) {
+    if(keycode(keyObj.keycode) === 'L') {
+        console.log(keyObj);
+    }
+    
     //Using similar processing to Matt's Eurotruck
     if(keyObj.down.mean > tactileThreshold) {
         return true;
@@ -164,6 +170,7 @@ function tactileDecisionMaker(keyObj) {
  */
 function setKeyState(keyObj) {
     //Use the remapping table from above to map keys around
+    console.log(keyObj);
    keyObj.code = remapKey(keyObj.code);
     //Sometimes the key object will be blank and have no data in .down or .up.
     //If this occurs we set the key to be up as we don't have enough data
