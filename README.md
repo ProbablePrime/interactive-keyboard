@@ -63,7 +63,8 @@ Please remember what start is too as I neglected to give viewers that particular
 Ive tested these with low numbers of viewers:
 * Gunstar Heroes(The whole reason this project exists)
 * Streets of Rage 2. There's a duel mode here where you can fight each other too!
-* 
+* Streets of Rage.
+* Ecco The Dolphin
 
 ## TODO
 * Wire up X Y Z just for the sake of having control pad completeness
