@@ -4,7 +4,9 @@
 
 Sega released a ton of Mega Drive/Genesis games into packs onto steam that are wrapped up into a nice official emulator.
 
-You can find the [packs on Steam](http://store.steampowered.com/search/?term=SEGA%20MEGA%20Drive%20Classics%20Pack) +
+Owning at least one game from the collection is **REQUIRED**. I reccomend [Streets of Rage 2](http://store.steampowered.com/app/71165/)
+
+There's also packs that include multiple games you can find the [packs on Steam](http://store.steampowered.com/search/?term=SEGA%20MEGA%20Drive%20Classics%20Pack) +
 [Pack 5](http://store.steampowered.com/sub/14445/) (Not included in my search results for some reason).
 
 There's also a [bundle](http://store.steampowered.com/sub/7827/) for a load of them which is what I purchased awhile ago. 
