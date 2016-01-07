@@ -10,7 +10,7 @@ You can find the [packs on Steam](http://store.steampowered.com/search/?term=SEG
 There's also a [bundle](http://store.steampowered.com/sub/7827/) for a load of them which is what I purchased awhile ago. 
 
 ## Setup
-I'll be aiming to make this simpler at a later date. Contact me on twitter(@ahref1) if you need help:
+I'll be aiming to make this simpler at a later date. Contact me on twitter if you need help:
 
 1. Get yourself [Nodejs](http://Nodejs.org) and Java
 2. Download this project as a zip file
