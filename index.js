@@ -170,8 +170,10 @@ function tactileDecisionMaker(keyObj) {
  */
 function setKeyState(keyObj) {
     //Use the remapping table from above to map keys around
-    console.log(keyObj);
-   keyObj.code = remapKey(keyObj.code);
+    //console.log(keyObj);
+    keyObj.original = keyObj.code;
+    keyObj.code = remapKey(keyObj.code);
+
     //Sometimes the key object will be blank and have no data in .down or .up.
     //If this occurs we set the key to be up as we don't have enough data
     if(!keyObj.down) {
@@ -182,6 +184,7 @@ function setKeyState(keyObj) {
     }
     var decision = tactileDecisionMaker(keyObj);
     if(decision !== null) {
+        console.log(keycode(keyObj.original),decision);
         setKey(keyObj.code, decision);
     }
 }
@@ -224,5 +227,4 @@ function setKey(key,status) {
     }
     //Rebound for status reporting
     status = (status) ? 'down' : 'up';
-    console.log(key,status);
 }

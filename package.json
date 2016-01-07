@@ -9,7 +9,7 @@
   "author": "Richard Fox",
   "license": "GPL",
   "dependencies": {
-    "beam-client-node": "git+https://github.com/rfox90/beam-client-node.git#6c4cf41d2569dc499e3c4febc71b055b31fc966a",
+    "beam-client-node": "0.1.0",
     "beam-interactive-node": "0.1.0",
     "bluebird": "^3.1.1",
     "kbm-robot": "0.0.3",
