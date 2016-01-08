@@ -7,33 +7,17 @@ var robot = require("kbm-robot");
 //Transforms codes(65) into key names(A) and visa versa
 var keycode = require('keycode');
 
-//kbm robot uses a background jar file to handle key events this starts it.
-robot.startJar();
-
 //Load the config values in from the json
 var config = require('./config/default.json');
 
-if(!config) {
-    console.log('Missing config file cannot proceed, Please create a config file. Check the readme for help!');
-    process.exit();
-}
+var username = config.beam.username
+var password = config.beam.password;
 
-var stream = 0;
-try {
-    stream = parseInt(config.beam.channel,10);
-} catch (e) {
-    console.log('Channel must be your Numeric channel id and NOT the channel name. Check the readme to see how to get this.');
-}
+//50% of users must be voting on an action for it to happen
+var tactileThreshold = config.threshold || 0.5;
 
-function validateConfig() {
-    var needed = ["channel","password","username"];
-    needed.forEach(function(value){
-        if(!config.beam[value]) {
-            console.error("Missing "+value+ "in your config file. Please add it to the file. Check the readme if you are unsure!");
-        }
-    });
-}
-validateConfig();
+var beam = new Beam();
+
 
 //My onscreen controls are likely to be controls a player(streamer) might use if they don't have a gamepad.
 //So we remap keys from the report to lesser used keys here. Ideally id like to emulate a HID and pass beam events through that.
@@ -64,48 +48,38 @@ function remapKey(code) {
     return code;
 }
 
-var username = config.beam.username
-var password = config.beam.password;
-
-//50% of users must be voting on an action for it to happen
-var tactileThreshold = config.threshold || 0.5;
-
-var beam = new Beam();
-
-if (config.api) {
-    beam.setUrl('api',config.api);
-}
-
-if (config.auth) {
-    beam.setExtraRequestArguments({
-        auth: config.auth
-    });
-}
-beam.use('password', {
-    username: username,
-    password: password
-}).attempt().then(function () {
-    return beam.game.join(stream);
-}).then(function (details) {
-    details = details.body;
-    details.remote = details.address;
-    details.channel = stream;
-    var robot = new Tetris.Robot(details);
-    robot.handshake(function(err){
-        if(err) {
-            console.log('Theres a problem connecting to beam, show this to a codey person');
-            throw err;
-        } else {
-            console.log('Connected to Beam');
+function validateConfig() {
+    var needed = ["channel","password","username"];
+    needed.forEach(function(value){
+        if(!config.beam[value]) {
+            console.error("Missing "+value+ "in your config file. Please add it to the file. Check the readme if you are unsure!");
         }
     });
+}
 
-    robot.on('report',handleReport);
-}).catch(function(err){
-    console.log(err);
-});
+function setup() {
+    //kbm robot uses a background jar file to handle key events this starts it.
+    robot.startJar();
 
-var recievingReports = true;
+    if(!config) {
+        console.log('Missing config file cannot proceed, Please create a config file. Check the readme for help!');
+        process.exit();
+    }
+
+    validateConfig();
+
+    
+    try {
+        var streamID = parseInt(config.beam.channel,10);
+        if(!steamID.isNAN()) {
+            go(streamID);
+        }
+    } catch (e) {
+        getChannelID(config.beam.channel, function(result){
+            go(result);
+        })
+    }
+}
 
 /**
  * Our report handler, entry point for data from beam
@@ -123,6 +97,7 @@ function handleReport(report) {
     }
 }
 
+var recievingReports = true;
 /**
  * Watchdog gets called every 500ms to check the status of the reports coming into us from beam.
  * If we havent had any reports that contained usable data in (5 * 500ms)(2.5s) we clear all the
@@ -142,7 +117,7 @@ function watchDog() {
     }
 }
 
-setInterval(watchDog,500);
+
 
 /**
  * Given a report, workout what should happen to the key.
@@ -228,3 +203,42 @@ function setKey(key,status) {
     //Rebound for status reporting
     status = (status) ? 'down' : 'up';
 }
+
+
+function getChannelID(channelName,cb) {
+    beam.request('GET','channels/'+channelName).then(function(res){
+        if(typeof cb === "function") {
+            cb(res.body.id);
+        }
+    });
+}
+
+function go(id) {
+    beam.use('password', {
+        username: username,
+        password: password
+    }).attempt().then(function () {
+        return beam.game.join(id);
+    }).then(function (details) {
+        details = details.body;
+        details.remote = details.address;
+        details.channel = id;
+        var robot = new Tetris.Robot(details);
+        robot.handshake(function(err){
+            if(err) {
+                console.log('Theres a problem connecting to beam, show this to a codey person');
+                console.log(err.message.body);
+            } else {
+                console.log('Connected to Beam');
+            }
+        });
+
+        robot.on('report',handleReport);
+        setInterval(watchDog,500);
+    }).catch(function(err){
+        console.log(err.message.body);
+    });
+}
+
+
+setup();
