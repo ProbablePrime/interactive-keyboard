@@ -2,8 +2,7 @@
     "beam": {
         "username": "username",
         "password": "password",
-        "channel": "channelid"
+        "channel": "channelname"
     },
     "threshold":0.5,
-    "api":"https://beam.pro/api/v1"
 }
