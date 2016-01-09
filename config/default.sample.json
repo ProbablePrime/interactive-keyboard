@@ -4,5 +4,5 @@
         "password": "password",
         "channel": "channelname"
     },
-    "threshold":0.5,
+    "threshold":0.5
 }
