@@ -2,13 +2,17 @@ var Beam = require('beam-client-node');
 var Tetris = require('beam-interactive-node');
 
 //Lets us control the keyboard and mouse of the computer
-var robot = require("kbm-robot");
+var controls = require("kbm-robot");
 
 //Transforms codes(65) into key names(A) and visa versa
 var keycode = require('keycode');
 
 //Load the config values in from the json
 var config = require('./config/default.json');
+
+var Packets = require('beam-interactive-node/dist/robot/packets');
+
+var Target = Packets.ProgressUpdate.Progress.TargetType;
 
 var username = config.beam.username
 var password = config.beam.password;
@@ -17,6 +21,8 @@ var password = config.beam.password;
 var tactileThreshold = config.threshold || 0.5;
 
 var beam = new Beam();
+
+var robot = null;
 
 
 //My onscreen controls are likely to be controls a player(streamer) might use if they don't have a gamepad.
@@ -58,8 +64,8 @@ function validateConfig() {
 }
 
 function setup() {
-    //kbm robot uses a background jar file to handle key events this starts it.
-    robot.startJar();
+    //kbm controls uses a background jar file to handle key events this starts it.
+    controls.startJar();
 
     if(!config) {
         console.log('Missing config file cannot proceed, Please create a config file. Check the readme for help!');
@@ -138,6 +144,14 @@ function tactileDecisionMaker(keyObj) {
     return null;
 }
 
+function createProgressForKey(keycode,result) {
+    return {
+        target: Target.TACTILE,
+        code:keycode,
+        progress: result,
+        fired: (result === 1) ? true : false
+    };
+}
 
 /**
  * Workout for each key if it should be pushed or unpushed according to the report.
@@ -146,6 +160,11 @@ function tactileDecisionMaker(keyObj) {
 function setKeyState(keyObj) {
     //Use the remapping table from above to map keys around
     //console.log(keyObj);
+    
+    //Ignore start for now, spam is bad K?
+    if(keycode(keyObj.code) === 'I') {
+        return;
+    }
     keyObj.original = keyObj.code;
     keyObj.code = remapKey(keyObj.code);
 
@@ -157,15 +176,20 @@ function setKeyState(keyObj) {
         }
         return;
     }
+
     var decision = tactileDecisionMaker(keyObj);
     if(decision !== null) {
         console.log(keycode(keyObj.original),decision);
         setKey(keyObj.code, decision);
     }
+    return createProgressForKey(keyObj.original, (decision !== null && decision ) ? 1 : 0);
 }
 
 function handleTactile(tactile) {
-    tactile.forEach(setKeyState);
+    var progress = tactile.map(setKeyState);
+    if(robot !== null) {
+        robot.send(new Packets.ProgressUpdate({ progress }));
+    }
 }
 
 /**
@@ -175,12 +199,23 @@ function handleTactile(tactile) {
  * @param {Boolean} remap  True to also run the keys through the remapping routine.
  */
 function setKeys(keys,status,remap) {
+    var codes = keys.map(function(key) {
+        return keycode(key);
+    });
     if(remap) {
         keys = keys.map(remapKey);
     }
     keys.forEach(function(key) {
         setKey(key,status);
     });
+
+    codes = codes.map(function(value) {
+        return createProgressForKey(value, (status) ? 1 : 0);
+    });
+    console.log(codes);
+    if(robot !== null) {
+        robot.send(new Packets.ProgressUpdate({ progress:codes }));
+    }
 }
 
 /**
@@ -196,9 +231,9 @@ function setKey(key,status) {
     //Our robot library is meant to be used for sequences of actions, everytime we do something
     //we have to call .go to finish the chain;
     if(status) {
-        robot.press(key).go();
+        controls.press(key).go();
     } else {
-        robot.release(key).go();
+        controls.release(key).go();
     }
     //Rebound for status reporting
     status = (status) ? 'down' : 'up';
@@ -223,11 +258,11 @@ function go(id) {
         details = details.body;
         details.remote = details.address;
         details.channel = id;
-        var robot = new Tetris.Robot(details);
+        robot = new Tetris.Robot(details);
         robot.handshake(function(err){
             if(err) {
                 console.log('Theres a problem connecting to beam, show this to a codey person');
-                console.log(err.message.body);
+                console.log(err);
             } else {
                 console.log('Connected to Beam');
             }
