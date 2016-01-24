@@ -1,3 +1,6 @@
+
+#WARNING!!!: KBM-ROBOT which is the underlying node module that pushes the keyboard keys virtually sometimes stuck. A physical keypress will fix this. I will fix this after the Beam Controls update.
+
 ![logo](https://raw.githubusercontent.com/rfox90/beam-segacollection/master/img/logo.png)
 
 # Beam Plays the Sega Collection
