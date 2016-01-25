@@ -2,7 +2,9 @@
 
 # Important notes
 
-I Strongly suggest anyone using an older commit of this that utilizes kbm-robot. The way kbm-robot was being used led it to sometimes get stuck. We now use [keyboardz](https://github.com/ProbablePrime/keyboardz). Its closer to the windows api. 
+I Strongly suggest anyone using an older commit of this that utilizes kbm-robot. The way kbm-robot was being used led it to sometimes get stuck. We now use [keyboardz](https://github.com/ProbablePrime/keyboardz). Its closer to the windows api. It does not support the number row of the keyboard AT ALL. 
+
+Supported keys are listed in https://github.com/ProbablePrime/keyboardz/blob/master/index.cs !
 
 Thus this project also only supports windows ATM. I'll fix it when i can.
 
