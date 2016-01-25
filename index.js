@@ -271,7 +271,10 @@ function go(id) {
         robot.on('report',handleReport);
         setInterval(watchDog,500);
     }).catch(function(err){
-        console.log(err.message.body);
+        if(err.message !== undefined && err.message.body !== undefined) {
+            err = err.message.body;
+        }
+        console.log(err);
     });
 }
 
