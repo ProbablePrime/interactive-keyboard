@@ -1,7 +1,10 @@
-
-#WARNING!!!: KBM-ROBOT which is the underlying node module that pushes the keyboard keys virtually sometimes gets stuck. A physical keypress will fix this. I will fix this after the Beam Controls update.
-
 ![logo](https://raw.githubusercontent.com/rfox90/beam-segacollection/master/img/logo.png)
+
+# Important notes
+
+I Strongly suggest anyone using an older commit of this that utilizes kbm-robot. The way kbm-robot was being used led it to sometimes get stuck. We now use [keyboardz](https://github.com/ProbablePrime/keyboardz). Its closer to the windows api. 
+
+Thus this project also only supports windows ATM. I'll fix it when i can.
 
 # Beam Plays the Sega Collection
 
