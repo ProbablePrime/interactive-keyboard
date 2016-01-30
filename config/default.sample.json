@@ -1,8 +1,10 @@
 {
     "beam": {
-        "username": "username",
-        "password": "password",
-        "channel": "channelname"
+        "username": "ProbablePrime",
+        "password": "",
+        "channel": "ProbablePrime"
     },
-    "threshold":0.5
+    "threshold":0.5,
+    "handler": "robotjs",
+    "remap":false,
 }
