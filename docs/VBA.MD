@@ -25,4 +25,4 @@ Visual Boy Advance is a a gameboy advanced and gameboy color emulator.
 }
 ```
 * Save the config in `config/vba.json` or `config/gamename.json`
-* Launch the script in the usual way, specifiyng your VBA config `node index.js config/vba.json`
+* Launch the script in the usual way, specifiyng your VBA config `node index.js ./config/vba.json`
