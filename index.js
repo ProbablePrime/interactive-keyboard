@@ -4,8 +4,29 @@ var Tetris = require('beam-interactive-node');
 //Transforms codes(65) into key names(A) and visa versa
 var keycode = require('keycode');
 
-//Load the config values in from the json
-var config = require('./config/default.json');
+var args = process.argv.slice(2);
+
+var configFile;
+configFile = args[0];
+
+if(configFile) {
+    configFile = configFile.replace('\\','/');
+} else {
+    console.warn('using default config file');
+    configFile = './config/default.json';
+}
+var config;
+try {
+    //Load the config values in from the json
+    config = require(configFile);
+} catch(e) {
+    if(e.code === 'MODULE_NOT_FOUND') {
+        console.log('Cannot find '+ configFile);
+    } else {
+        console.log('Your config file is incorrectly formatted, please check it at jsonlint.com');
+    }
+    process.exit();
+}
 
 //Remapping is now optional
 if(!config.remap) {
@@ -21,9 +42,6 @@ if(!config.handler) {
 var controls = require('./lib/handlers/'+config.handler+'.js');
 
 var Packets = require('beam-interactive-node/dist/robot/packets');
-
-var Target = Packets.ProgressUpdate.Progress.TargetType;
-
 
 var username = config.beam.username
 var password = config.beam.password;
@@ -75,26 +93,18 @@ function remapKey(code) {
     return code;
 }
 
-function validateConfig() {
-    var needed = ["channel","password","username"];
-    needed.forEach(function(value){
-        if(!config.beam[value]) {
-            console.error("Missing "+value+ "in your config file. Please add it to the file. Check the readme if you are unsure!");
-        }
-    });
-}
-
 /**
  * Our report handler, entry point for data from beam
  * @param  {Object} report 
  */
 function handleReport(report) {
+    //console.log(report)
     //if no users are playing or there's a brief absence of activity
     //the reports contain no data in the tactile/joystick array. So we detect if there's data
     //before attempting to process it
     if(report.tactile.length) {
         recievingReports = true;
-        handleTactile(report.tactile,report.quorum);
+        handleTactile(report.tactile,report.users);
     } else {
         recievingReports = false;
     }
@@ -113,7 +123,7 @@ function watchDog() {
             console.log('clearing player input due to lack of reports.');
             setKeys(keysToClear, false, config.remap);
         }
-        dogCount =dogCount + 1;
+        dogCount = dogCount + 1;
     } else {
         dogCount = 0;
     }
@@ -124,60 +134,60 @@ function watchDog() {
  * @param  {Object} keyObj Directly from the report.tactile array
  * @return {Boolean} true to push AND HOLD the button, false to let go. null to do nothing.
  */
-function tactileDecisionMaker(keyObj) {
+function tactileDecisionMaker(keyObj, quorum) {
     //Using similar processing to Matt's Eurotruck
-    if(keyObj.down.mean > tactileThreshold) {
+    if(keyObj.holding > quorum / 2) {
         return true;
-    } else if(keyObj.up.mean > tactileThreshold) {
-        return false;
     }
-    return null;
+    return false;
 }
 
-function createProgressForKey(keycode,result) {
-    return {
-        target: Target.TACTILE,
-        code:keycode,
+function createProgressForKey(keyObj,result) {
+    return new Packets.ProgressUpdate.TactileUpdate({
+        id: keyObj.id,
+        cooldown:0,
         progress: result,
         fired: (result === 1) ? true : false
-    };
+    });
 }
 
 /**
  * Workout for each key if it should be pushed or unpushed according to the report.
  * @param {[type]} keyObj [description]
  */
-function setKeyState(keyObj) {
-    if(keysToClear.indexOf(keycode(keyObj.code)) === -1) {
-        keysToClear.push(keycode(keyObj.code));
+function setKeyState(users,keyObj) {
+    if(keysToClear.indexOf(keycode(keyObj.id)) === -1) {
+        keysToClear.push(keycode(keyObj.id));
     }
 
-    keyObj.original = keyObj.code;
+    keyObj.original = keyObj.id;
     if(config.remap) {
-        keyObj.code = remapKey(keyObj.code);
+        keyObj.id = remapKey(keyObj.id);
     }
 
     //Sometimes the key object will be blank and have no data in .down or .up.
     //If this occurs we set the key to be up as we don't have enough data
-    if(!keyObj.down) {
-        if(keyObj.code) {
-            setKey(keyObj.code,false);
+    if(!keyObj.holding) {
+        if(keyObj.id) {
+            setKey(keyObj.id,false);
         }
         return;
     }
 
-    var decision = tactileDecisionMaker(keyObj);
+    var decision = tactileDecisionMaker(keyObj, users.quorum);
     if(decision !== null) {
-        console.log(keycode(keyObj.original),decision);
-        setKey(keyObj.code, decision);
+        console.log(keycode(keyObj.original), decision);
+        setKey(keyObj.id, decision);
     }
-    return createProgressForKey(keyObj.original, (decision !== null && decision ) ? 1 : 0);
+    return createProgressForKey(keyObj, (decision !== null && decision ) ? 1 : 0);
 }
 
-function handleTactile(tactile) {
-    var progress = tactile.map(setKeyState);
+function handleTactile(tactile, users) {
+    var progress = tactile.map(setKeyState.bind(this,users));
     if(robot !== null) {
-        robot.send(new Packets.ProgressUpdate({ progress }));
+        robot.send(new Packets.ProgressUpdate({
+            tactile: progress
+        }));
     }
 }
 
@@ -201,9 +211,12 @@ function setKeys(keys,status,remap) {
     codes = codes.map(function(value) {
         return createProgressForKey(value, (status) ? 1 : 0);
     });
+
     console.log(codes);
     if(robot !== null) {
-        robot.send(new Packets.ProgressUpdate({ progress:codes }));
+        robot.send(new Packets.ProgressUpdate({
+            tactile: codes
+        }));
     }
 }
 
@@ -222,20 +235,27 @@ function setKey(key,status) {
     }
 }
 
-function getChannelID(channelName,cb) {
-    beam.request('GET','channels/'+channelName).then(function(res){
-        if(typeof cb === "function") {
-            cb(res.body.id);
+function getChannelID(channelName) {
+    return beam.request('GET','channels/'+channelName).then(function(res){
+        return res.body.id;
+    });
+}
+
+function validateConfig() {
+     if(!config) {
+        console.log('Missing config file cannot proceed, Please create a config file. Check the readme for help!');
+        process.exit();
+    }
+    var needed = ["channel","password","username"];
+    needed.forEach(function(value){
+        if(!config.beam[value]) {
+            console.error("Missing "+value+ " in your config file. Please add it to the file. Check the readme if you are unsure!");
+            process.exit();
         }
     });
 }
 
 function setup() {
-    if(!config) {
-        console.log('Missing config file cannot proceed, Please create a config file. Check the readme for help!');
-        process.exit();
-    }
-
     validateConfig();
 
     try {
@@ -244,8 +264,18 @@ function setup() {
             go(streamID);
         }
     } catch (e) {
-        getChannelID(config.beam.channel, function(result){
-            go(result);
+        var target = config.beam.channel;
+        if(!target) {
+            target = config.beam.username;
+        }
+        console.log('getting '+ target);
+        getChannelID(target).then(function(result) {
+            if(result) {
+                go(result);
+            }
+        }, function(e){
+            console.log('Invalid channel specified in config file, or no channel found on beam');
+            process.exit();
         })
     }
 }
