@@ -70,7 +70,7 @@ Please remember what start is too as I neglected to give viewers that particular
 
 1. Launch the sega collection and pick a game, Wait till you get to the games main menu.
 2. Set Beam to Interactive mode and select the Sega Collection as your game
-3. Run the script with `node index.js config\sega.json` or your Operating system's equivelant. 
+3. Run the script with `node index.js ./config/sega.json` or your Operating system's equivelant. 
 4. If you see "Connected to beam" your all good and can start playing.
 
 ##Games Tested
