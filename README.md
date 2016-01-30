@@ -17,17 +17,17 @@ Video Coming Soon!
 7. Enter npm install. This will install project dependancies
 8. Choose a keyboard handler, I reccomend robotjs.
 9. Install your handler with `npm install robotjs`
-10. Write a config file in config/ called default.json follow the sample one for a guide. A video is coming soon.
+10. Write a config file in config/ called <YOUR GAME>.json example `config/pokemon.json` follow the sample one for a guide. A video is coming soon.
 11. Start your chosen game, Open a cmd/terminal in the folder you donwnloaded.
 12. Hit Go Interactive and select your game on beam.
-12. Do node index.js in the terminal from step 11.
+12. Enter `node index.js config/<YOUR GAME>.json` in the terminal from step 11.
 13. If you see "Connected to beam" you should be good to go.
 14. Test out your controls.
 
 ## Config File Specifications
 
 Comments within the file are **Invalid** But are included below here to provide instructions.
-Remove them in your actual config file. Use config/default.sample.json as a base.
+Remove them in your actual config file. Use [config/default.sample.json](config/default.sample.json) as a base/example.
 
 `<>`'s indicate that you should replace the value and the `<>`'s with an apropriate value suitable to you.
 E.G. `<username>` would become `ProbablePrime` in my case.
@@ -35,17 +35,19 @@ E.G. `<username>` would become `ProbablePrime` in my case.
 ```
 {
     "beam": {
-		//Your Beam username
+	//Your Beam username
         "username": "<username>",
         //Your Beam Password
         "password": "<password>",
         //Your Beam channel
         "channel": "<channel name>"
     },
-    //What percentage of people need to be pushing a button for it to count (0.5 = 50%)
-    "threshold":0.5,
-    //Which keyboard handler are you using, **I STRONGLY RECCOMEND ROBOTJS"
+    //Which keyboard handler are you using, **I STRONGLY RECCOMEND LEAVING THIS AS ROBOTJS"
     "handler": "robotjs",
+    
+    
+    //THE FOLLOWING ARE OPTIONAL, and should only be included if you want to remap controls
+    
     //Should we remap the keys recieved from beam into other keys, default value is false
     "remap":true,
     //What should the key remaps be, in this example, if your beam controls use W this will actually push 1
@@ -65,6 +67,6 @@ E.G. `<username>` would become `ProbablePrime` in my case.
 
 Always test your config file on a site like jsonlint.com to check that it is valid
 
-#Example Game Configs
+#Example Game Setups
 * [Sega Collection](docs/SegaCollection.MD)
-* [Visual Boy Advanced](docs/VBA.MD)
+* [Visual Boy Advance](docs/VBA.MD)
