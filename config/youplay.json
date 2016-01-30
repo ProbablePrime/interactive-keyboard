@@ -1,0 +1,9 @@
+{
+    "beam": {
+        "username": "Youplay",
+        "password": "",
+        "channel": "Youplay"
+    },
+    "handler": "robotjs",
+    "remap":false
+}
