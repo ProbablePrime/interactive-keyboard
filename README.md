@@ -1,127 +1,69 @@
+
 ![logo](https://raw.githubusercontent.com/rfox90/beam-segacollection/master/img/logo.png)
 
-# Important notes
+# Beam Plays a Keyboard
 
-I Strongly suggest anyone using an older commit of this that utilizes kbm-robot. The way kbm-robot was being used led it to sometimes get stuck. We now use [keyboardz](https://github.com/ProbablePrime/keyboardz). Its closer to the windows api. It does not support the number row of the keyboard AT ALL. 
-
-Supported keys are listed in https://github.com/ProbablePrime/keyboardz/blob/master/index.cs !
-
-Thus this project also only supports windows ATM. I'll fix it when i can.
-
-# Beam Plays the Sega Collection
-
-Sega released a ton of Mega Drive/Genesis games into packs onto steam that are wrapped up into a nice official emulator.
-
-Owning at least one game from the collection is **REQUIRED**. I reccomend [Streets of Rage 2](http://store.steampowered.com/app/71165/)
-
-There's also packs that include multiple games you can find the [packs on Steam](http://store.steampowered.com/search/?term=SEGA%20MEGA%20Drive%20Classics%20Pack) +
-[Pack 5](http://store.steampowered.com/sub/14445/) (Not included in my search results for some reason).
-
-There's also a [bundle](http://store.steampowered.com/sub/7827/) for a load of them which is what I purchased awhile ago. 
+Do you want to make a Beam Interactive Game? Quickely? This is for you.
 
 ## Setup
-I'll be aiming to make this simpler at a later date. Contact me on twitter if you need help:
+Video Coming Soon!
 
-1. Get yourself [Nodejs](http://Nodejs.org) and Java
-2. Download this project as a zip file
-3. Unzip it.
-4. Open a terminal/cmd in its folder
-5. Enter npm install. This will install project dependancies
-6. Write a config file in config/ called default.json follow the sample one for a guide.
-7. Open up the Sega Collection via steam and click options.
+1. Pick a keyboard controlled game. Any game that allows configureable controls will work yes *ANY*.
+2. Make a Controls layout for that game in the Beam Controls Editor
+3. Get yourself [Nodejs](http://Nodejs.org)
+4. Download this project as a zip file
+5. Unzip it.
+6. Open a terminal/cmd in its folder
+7. Enter npm install. This will install project dependancies
+8. Choose a keyboard handler, I reccomend robotjs.
+9. Install your handler with `npm install robotjs`
+10. Write a config file in config/ called default.json follow the sample one for a guide. A video is coming soon.
+11. Start your chosen game, Open a cmd/terminal in the folder you donwnloaded.
+12. Hit Go Interactive and select your game on beam.
+12. Do node index.js in the terminal from step 11.
+13. If you see "Connected to beam" you should be good to go.
+14. Test out your controls.
 
-I've set this up to use the top row of the keyboard 1 - =. This keeps things like WSAD free for YOU to use if you don't have a controller. I'm also limited by the choice of keys that the underlying nodejs module that pushes keyboard keys for you can use.
+## Config File Specifications
 
-The end goal is to emulate a HID device and ouput button pushes so we don't have to use your keyboard but until then. Pause interactive mode if you need to type.
+Comments within the file are **Invalid** But are included below here to provide instructions.
+Remove them in your actual config file. Use config/default.sample.json as a base.
 
-### For One player games (Beam Plays):
-Setup the 1st player to be custom keyboard
+`<>`'s indicate that you should replace the value and the `<>`'s with an apropriate value suitable to you.
+E.G. `<username>` would become `ProbablePrime` in my case.
 
-![Custom Keyboard](http://i.ahref.co.uk/u/r/QlSx.png)
+```
+{
+    "beam": {
+		//Your Beam username
+        "username": "<username>",
+        //Your Beam Password
+        "password": "<password>",
+        //Your Beam channel
+        "channel": "<channel name>"
+    },
+    //What percentage of people need to be pushing a button for it to count (0.5 = 50%)
+    "threshold":0.5,
+    //Which keyboard handler are you using, **I STRONGLY RECCOMEND ROBOTJS"
+    "handler": "robotjs",
+    //Should we remap the keys recieved from beam into other keys, default value is false
+    "remap":true,
+    //What should the key remaps be, in this example, if your beam controls use W this will actually push 1
+    //This is optional remove this block if you don't need it
+    "remapTable": {
+        "W":"1",
+        "S":"2",
+        "A":"3",
+        "D":"4",
+        "J":"5",
+        "K":"6",
+        "L":"7",
+        "I":"8"
+    }
+}
+```
 
-Click assign controller mapping and set it up like this:
+Always test your config file on a site like jsonlint.com to check that it is valid
 
-![One player controls][controls]
-
-### For Two Player Games (Play *With* Beam)
-
-Setup Player one however you like.
-
-Set player two to custom keyboard:
-
-![Custom Keyboard](http://i.ahref.co.uk/u/r/QlSx.png)
-
-Click assign controller mapping and set it up like this:
-
-![Two player controls][controls]
-
-### Notes
-X,Y and Z don't really matter here only a small amount of Mega Drive games used them and to the best of my knowledge they aren't included in the packs on steam.
-
-Please remember what start is too as I neglected to give viewers that particular control to prevent "Pause Spam" whilst I workout kinks in how I handle data from Beam. You may have to for some games push start for the viewers. Every other control works fine though.
-
-## Use
-
-1. Launch the sega collection and pick a game, Wait till you get to the games main menu.
-2. Set Beam to Interactive mode etc. (TODO: Once site is live)
-3. Run the program with `node index.js` or your Operating system's equivelant. 
-4. If you see "Connected to beam" your all good and can start playing.
-5. If you see any messages or errors your setup may be incomplete or your config file may be missing or missconfigured. Refer to the example config file to see how one should be layed out.
-6. Leave the window open and it'll report button state changes.
-
-##Games Tested
-Ive tested these with low numbers of viewers:
-* Gunstar Heroes(The whole reason this project exists)
-* Streets of Rage 2. There's a duel mode here where you can fight each other too!
-* Streets of Rage.
-* Ecco The Dolphin
-
-## TODO
-* Wire up X Y Z just for the sake of having control pad completeness
-* Adjust code to handle and ignore users who are spamming pause.
-* Somehow emulate a HID device and move this OFF the keyboard.
-* Test more games
-
-##Games
-A partial list of games in the collection:
-* Alex Kidd™ in the Enchanted Castle
-* Alien Soldier
-* Alien Storm
-* Altered Beast™
-* Bio-Hazard Battle™
-* Bonanza Bros.™
-* Columns™
-* Columns™ III
-* Comix Zone™
-* Crack Down™
-* Decap Attack™
-* Ecco the Dolphin™
-* Ecco™ Jr.
-* Ecco™: The Tides of Time
-* ESWAT™: City Under Siege
-* Eternal Champions™
-* Fatal Labyrinth™
-* Flicky™
-* Gain Ground™
-* Galaxy Force II™
-* Golden Axe™
-* Golden Axe™ II
-* Gunstar Heroes
-* Kid Chameleon™
-* Landstalker: The Treasures of King Nole
-* Light Crusader
-* Ristar™
-* Shadow Dancer™
-* Shining Force
-* Shining Force II
-* Shining in the Darkness
-* Shinobi™ III: Return of the Ninja Master
-* Space Harrier™ II
-* Streets of Rage
-* Streets of Rage 2
-* Super Thunder Blade™
-* Sword of Vermilion™
-* Vectorman™
-* Virtua Fighter™ 2
-
-[controls]: http://i.ahref.co.uk/u/r/LW5B.png
+#Example Game Configs
+Sega Collection
