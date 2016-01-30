@@ -66,4 +66,5 @@ E.G. `<username>` would become `ProbablePrime` in my case.
 Always test your config file on a site like jsonlint.com to check that it is valid
 
 #Example Game Configs
-Sega Collection
+* [Sega Collection](docs/SegaCollection.MD)
+* [Visual Boy Advanced](docs/VBA.MD)
