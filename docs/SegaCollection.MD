@@ -1,8 +1,4 @@
 
-#WARNING!!!: KBM-ROBOT which is the underlying node module that pushes the keyboard keys virtually sometimes gets stuck. A physical keypress will fix this. I will fix this after the Beam Controls update.
-
-![logo](https://raw.githubusercontent.com/rfox90/beam-segacollection/master/img/logo.png)
-
 # Beam Plays the Sega Collection
 
 Sega released a ton of Mega Drive/Genesis games into packs onto steam that are wrapped up into a nice official emulator.
@@ -15,15 +11,30 @@ There's also packs that include multiple games you can find the [packs on Steam]
 There's also a [bundle](http://store.steampowered.com/sub/7827/) for a load of them which is what I purchased awhile ago. 
 
 ## Setup
-I'll be aiming to make this simpler at a later date. Contact me on twitter if you need help:
-
-1. Get yourself [Nodejs](http://Nodejs.org) and Java
-2. Download this project as a zip file
-3. Unzip it.
-4. Open a terminal/cmd in its folder
-5. Enter npm install. This will install project dependancies
-6. Write a config file in config/ called default.json follow the sample one for a guide.
-7. Open up the Sega Collection via steam and click options.
+* Follow the regular set from the [readme](../README.md)
+* Write a config file in config/ called sega.json (`config/sega.json`)
+```
+{
+  "beam": {
+    "username": "Your username",
+    "password": "",
+    "channel": "Your channel"
+  },
+  "handler": "kbm-robot",
+  "remap":true,
+  "remapTable": {
+    'W':'1',
+    'S':'2',
+    'A':'3',
+    'D':'4',
+    'J':'5',
+    'K':'6',
+    'L':'7',
+    'I':'8'
+  }
+}
+```
+* Open up the Sega Collection via steam and click options.
 
 I've set this up to use the top row of the keyboard 1 - =. This keeps things like WSAD free for YOU to use if you don't have a controller. I'm also limited by the choice of keys that the underlying nodejs module that pushes keyboard keys for you can use.
 
@@ -58,11 +69,9 @@ Please remember what start is too as I neglected to give viewers that particular
 ## Use
 
 1. Launch the sega collection and pick a game, Wait till you get to the games main menu.
-2. Set Beam to Interactive mode etc. (TODO: Once site is live)
-3. Run the program with `node index.js` or your Operating system's equivelant. 
+2. Set Beam to Interactive mode and select the Sega Collection as your game
+3. Run the script with `node index.js config\sega.json` or your Operating system's equivelant. 
 4. If you see "Connected to beam" your all good and can start playing.
-5. If you see any messages or errors your setup may be incomplete or your config file may be missing or missconfigured. Refer to the example config file to see how one should be layed out.
-6. Leave the window open and it'll report button state changes.
 
 ##Games Tested
 Ive tested these with low numbers of viewers:
@@ -70,12 +79,6 @@ Ive tested these with low numbers of viewers:
 * Streets of Rage 2. There's a duel mode here where you can fight each other too!
 * Streets of Rage.
 * Ecco The Dolphin
-
-## TODO
-* Wire up X Y Z just for the sake of having control pad completeness
-* Adjust code to handle and ignore users who are spamming pause.
-* Somehow emulate a HID device and move this OFF the keyboard.
-* Test more games
 
 ##Games
 A partial list of games in the collection:
