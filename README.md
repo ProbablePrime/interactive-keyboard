@@ -65,7 +65,27 @@ E.G. `<username>` would become `ProbablePrime` in my case.
 }
 ```
 
-Always test your config file on a site like jsonlint.com to check that it is valid
+Always test your config file on a site like jsonlint.com to check that it is valid.
+
+# Metric / Maths
+With potentially 100s of people pushing the buttons we need some way to decide if a button should be pushed. 
+
+Beam currently provides in each report:
+* the number of people who've used the controls at various intervals(now, 10s,20s,30s..etc)
+* the number of people watching the stream
+* For each button:
+   * The number of people holding a button down
+   * the number of button pushes
+   * the number of button releases
+
+Based on that we have to make a decision. This code's current decision process is.
+
+* For Each Button:
+    * If the number of people holding the button down is greater or equal to half the people active 
+     on the grid at the time of the report.
+    * Push the button.
+   
+If you can think of a better Metric. Please feel free to PR.
 
 #Example Game Setups
 * [Sega Collection](docs/SegaCollection.MD)
