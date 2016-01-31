@@ -275,7 +275,6 @@ function getChannelID(channelName) {
 
 //interactive: true, tetrisGameId: versionId, tetrisShareCode: :code
 function goInteractive(versionCode,shareCode) {
-    console.log(versionCode,shareCode);
      return beam.request('PUT','channels/'+channelID, {body:{
         interactive: true,
         tetrisGameId: versionCode,
