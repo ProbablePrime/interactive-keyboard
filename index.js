@@ -311,6 +311,10 @@ function validateConfig() {
         console.log('Missing config file cannot proceed, Please create a config file. Check the readme for help!');
         process.exit();
     }
+    if(!config.version || !config.code) {
+        console.log('Missing version id and share code. These are required for now');
+        process.exit();
+    }
     var needed = ["channel","password","username"];
     needed.forEach(function(value){
         if(!config.beam[value]) {
