@@ -185,7 +185,6 @@ function setKeyState(users,keyObj) {
         if(keyObj.code) {
             setKey(keyObj.code,false);
         }
-        return;
     }
 
     var decision = tactileDecisionMaker(keyObj, users.quorum);
@@ -198,11 +197,15 @@ function setKeyState(users,keyObj) {
 
 function handleTactile(tactile, users) {
     var progress = tactile.map(setKeyState.bind(this,users));
+    if(!tactile) {
+        tactile = [];
+    }
     if(robot !== null) {
-        robot.send(new Packets.ProgressUpdate({
+        var args = {
             joystick:[],
             tactile: progress
-        }));
+        };
+        robot.send(new Packets.ProgressUpdate(args));
     }
 }
 
