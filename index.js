@@ -56,6 +56,8 @@ var robot = null;
 var recievingReports = true;
 var keysToClear = [];
 
+var channelID = 0;
+
 /* My onscreen controls are likely to be controls a player(streamer) might use if they don't have a gamepad.
    So we remap keys from the report to lesser used keys here. Ideally id like to emulate a HID and pass beam events through that.
    That way the streamer can type in chat without 123129301293120392 appearing. However the interface allows you to toggle interactive mode
@@ -102,7 +104,8 @@ function handleReport(report) {
     //if no users are playing or there's a brief absence of activity
     //the reports contain no data in the tactile/joystick array. So we detect if there's data
     //before attempting to process it
-    if(report.tactile.length) {
+
+    if(report.tactile.length && report.users.quorum > 0) {
         recievingReports = true;
         handleTactile(report.tactile,report.users);
     } else {
@@ -136,6 +139,9 @@ function watchDog() {
  */
 function tactileDecisionMaker(keyObj, quorum) {
     //Using similar processing to Matt's Eurotruck
+    if(!quorum) {
+        return false;
+    }
     if(keyObj.holding > quorum / 2) {
         return true;
     }
@@ -146,8 +152,8 @@ function createProgressForKey(keyObj,result) {
     return new Packets.ProgressUpdate.TactileUpdate({
         id: keyObj.id,
         cooldown:0,
-        progress: result,
-        fired: (result === 1) ? true : false
+        fired: (result === 1) ? true : false,
+        progress: result
     });
 }
 
@@ -156,28 +162,36 @@ function createProgressForKey(keyObj,result) {
  * @param {[type]} keyObj [description]
  */
 function setKeyState(users,keyObj) {
-    if(keysToClear.indexOf(keycode(keyObj.id)) === -1) {
-        keysToClear.push(keycode(keyObj.id));
+
+    //Pull the code from our map of ids -> codes
+    keyObj.code = getKeyCodeForID(keyObj.id);
+
+    //Keep a list of keys that we need to clear when
+    //there's a lack of input.
+    //We do it via ids
+    if(keysToClear.indexOf(keycode(keyObj.code)) === -1) {
+        keysToClear.push(keycode(keyObj.code));
     }
 
-    keyObj.original = keyObj.id;
+    keyObj.original = keyObj.code;
+
+    //Remappa if enabled
     if(config.remap) {
-        keyObj.id = remapKey(keyObj.id);
+        keyObj.code = remapKey(keyObj.code);
     }
 
-    //Sometimes the key object will be blank and have no data in .down or .up.
-    //If this occurs we set the key to be up as we don't have enough data
+
     if(!keyObj.holding) {
-        if(keyObj.id) {
-            setKey(keyObj.id,false);
+        if(keyObj.code) {
+            setKey(keyObj.code,false);
         }
         return;
     }
 
     var decision = tactileDecisionMaker(keyObj, users.quorum);
     if(decision !== null) {
-        console.log(keycode(keyObj.original), decision);
-        setKey(keyObj.id, decision);
+        //console.log(keycode(keyObj.original), decision);
+        setKey(keyObj.code, decision);
     }
     return createProgressForKey(keyObj, (decision !== null && decision ) ? 1 : 0);
 }
@@ -186,6 +200,7 @@ function handleTactile(tactile, users) {
     var progress = tactile.map(setKeyState.bind(this,users));
     if(robot !== null) {
         robot.send(new Packets.ProgressUpdate({
+            joystick:[],
             tactile: progress
         }));
     }
@@ -212,22 +227,26 @@ function setKeys(keys,status,remap) {
         return createProgressForKey(value, (status) ? 1 : 0);
     });
 
-    console.log(codes);
     if(robot !== null) {
-        robot.send(new Packets.ProgressUpdate({
-            tactile: codes
-        }));
+        // robot.send(new Packets.ProgressUpdate({
+        //     tactile: codes
+        // }));
     }
 }
 
 function setKey(key,status) {
+
     //Beam reports back keycodes, convert them to keynames, which robotjs accepts
     if(typeof key === 'number') {
         key = keycode(key);
     }
 
-    //Robotjs wants 'down' or 'up', I prefer true or false for the rest of my program
-    //handle that here
+    //Something in remapping or handling sometimes makes this undefined
+    //It causes an error to proceed so we'll stop here
+    if(!key) {
+        return;
+    }
+
     if(status) {
         controls.press(key.toUpperCase());
     } else {
@@ -236,8 +255,42 @@ function setKey(key,status) {
 }
 
 function getChannelID(channelName) {
-    return beam.request('GET','channels/'+channelName).then(function(res){
+    return beam.request('GET','channels/'+channelName).then(function(res) {
+        channelID = res.body.id;
         return res.body.id;
+    });
+}
+
+//interactive: true, tetrisGameId: versionId, tetrisShareCode: :code
+function goInteractive(versionCode,shareCode) {
+    console.log(versionCode,shareCode);
+     return beam.request('PUT','channels/'+channelID, {body:{
+        interactive: true,
+        tetrisGameId: versionCode,
+        tetrisShareCode: shareCode
+     },json:true}).then(function(res){
+     }, function(err){
+        //console.log(err);
+     });
+}
+
+var map = {};
+function getKeyCodeForID(id) {
+    return map[id];
+}
+/**
+ * The new controls editor/controls protocol doesn't send down the keycode.
+ * Pull the controls grid that players see from beam, build a map of, button id -> keycode
+ * @param  {Number} channelID
+ */
+function buildControlMap(channelID) {
+    beam.request('GET','tetris/'+channelID)
+    .then(function(res){
+        var controls = res.body.version.controls.tactiles;
+        controls.forEach(function(tactile) {
+            map[tactile.id] = tactile.key;
+        });
+        return map;
     });
 }
 
@@ -284,7 +337,12 @@ function go(id) {
     beam.use('password', {
         username: username,
         password: password
-    }).attempt().then(function () {
+    }).attempt()
+    .then(function(){
+        return goInteractive(config.version, config.code);
+    }).then(function() {
+        return buildControlMap(channelID);
+    }).then(function () {
         return beam.game.join(id);
     }).then(function (details) {
         details = details.body;
@@ -304,8 +362,10 @@ function go(id) {
     }).catch(function(err){
         if(err.message !== undefined && err.message.body !== undefined) {
             err = err.message.body;
+        } else {
+            throw err;
         }
-        console.log(err);
+        //console.log(err);
     });
 }
 
