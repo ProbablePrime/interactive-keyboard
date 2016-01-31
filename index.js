@@ -58,6 +58,8 @@ var keysToClear = [];
 
 var channelID = 0;
 
+var state = {};
+
 /* My onscreen controls are likely to be controls a player(streamer) might use if they don't have a gamepad.
    So we remap keys from the report to lesser used keys here. Ideally id like to emulate a HID and pass beam events through that.
    That way the streamer can type in chat without 123129301293120392 appearing. However the interface allows you to toggle interactive mode
@@ -139,10 +141,10 @@ function watchDog() {
  */
 function tactileDecisionMaker(keyObj, quorum) {
     //Using similar processing to Matt's Eurotruck
-    if(!quorum) {
-        return false;
+    if(!quorum || keyObj.holding === null) {
+        return null;
     }
-    if(keyObj.holding > quorum / 2) {
+    if(keyObj.holding >= quorum / 2) {
         return true;
     }
     return false;
@@ -180,25 +182,32 @@ function setKeyState(users,keyObj) {
         keyObj.code = remapKey(keyObj.code);
     }
 
-
-    if(!keyObj.holding) {
-        if(keyObj.code) {
-            setKey(keyObj.code,false);
+    var decision = tactileDecisionMaker(keyObj, users.qgram[0].users);
+    if(decision !== null) {
+        if(state[keyObj.original] !== decision) {
+            console.log(keycode(keyObj.original), decision, 'Users: '+ users.qgram[0].users,'Holding: '+keyObj.holding);
+            setKey(keyObj.code, decision);
+            state[keyObj.original] = decision;
+            return createProgressForKey(keyObj, (decision !== null && decision ) ? 1 : 0);
         }
     }
-
-    var decision = tactileDecisionMaker(keyObj, users.quorum);
-    if(decision !== null) {
-        //console.log(keycode(keyObj.original), decision);
-        setKey(keyObj.code, decision);
-    }
-    return createProgressForKey(keyObj, (decision !== null && decision ) ? 1 : 0);
 }
 
 function handleTactile(tactile, users) {
     var progress = tactile.map(setKeyState.bind(this,users));
+
+    //Remove undefineds from map
+    progress = progress.filter(function(progress){
+        return progress !== undefined;
+    })
+
     if(!tactile) {
         tactile = [];
+    }
+
+    //Don't send progress updates we don't need
+    if(!progress.length) {
+        return;
     }
     if(robot !== null) {
         var args = {
