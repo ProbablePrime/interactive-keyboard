@@ -15,7 +15,7 @@ Video Coming Soon!
 5. Unzip it.
 6. Open a terminal/cmd in its folder
 7. Enter npm install. This will install project dependancies
-8. Choose a keyboard handler, I reccomend robotjs.
+8. Choose a keyboard handler, I reccomend robotjs. There are other easier to install handlers described in the Handlers section below.
 9. Install your handler with `npm install robotjs`
 10. Write a config file in config/ called <YOUR GAME>.json example `config/pokemon.json` follow the sample one for a guide. A video is coming soon.
 11. Start your chosen game, Open a cmd/terminal in the folder you donwnloaded.
@@ -37,7 +37,7 @@ E.G. `<username>` would become `ProbablePrime` in my case.
     "beam": {
 	//Your Beam username
         "username": "<username>",
-        //Your Beam Password
+        //Your Beam Passwordsec
         "password": "<password>",
         //Your Beam channel
         "channel": "<channel name>"
@@ -45,7 +45,11 @@ E.G. `<username>` would become `ProbablePrime` in my case.
     //Which keyboard handler are you using, **I STRONGLY RECCOMEND LEAVING THIS AS ROBOTJS"
     "handler": "robotjs",
     
-    
+    //If your game is private. use these two properties to configure the version id and share code. Finding these
+    // is detailed in the Sharing your game section
+    "version":<versionid>,
+    "code":"<sharecode>",
+   
     //THE FOLLOWING ARE OPTIONAL, and should only be included if you want to remap controls
     
     //Should we remap the keys recieved from beam into other keys, default value is false
@@ -66,6 +70,21 @@ E.G. `<username>` would become `ProbablePrime` in my case.
 ```
 
 Always test your config file on a site like jsonlint.com to check that it is valid.
+
+# Sharing your game
+
+If your game is private or not published. You can use the version id and share code to enable other people (Including yourself to play it). To obtain these visit your controls and click the share button.
+
+![share](https://raw.githubusercontent.com/ProbablePrime/beam-keyboard/master/img/share.png)
+
+Select the second radio button in the popup. Your version code is a number displayed at the top of the popup. The share code is in the text box in the middle of the popup:
+![share_code](https://raw.githubusercontent.com/ProbablePrime/beam-keyboard/master/img/share_code.png)
+
+Place these in your config file:
+```
+    "version":<versionid>,
+    "code":"<sharecode>",
+```
 
 # Metric / Maths
 With potentially 100s of people pushing the buttons we need some way to decide if a button should be pushed. 
