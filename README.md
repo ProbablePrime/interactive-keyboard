@@ -18,8 +18,7 @@ Video Coming Soon!
 8. Choose a keyboard handler, I reccomend robotjs. There are other easier to install handlers described in the Handlers section below.
 9. Install your handler with `npm install robotjs`
 10. Write a config file in config/ called <YOUR GAME>.json example `config/pokemon.json` follow the sample one for a guide. A video is coming soon.
-11. Start your chosen game, Open a cmd/terminal in the folder you donwnloaded.
-12. Hit Go Interactive and select your game on beam.
+11. Start your chosen game, Open a cmd/terminal in the folder you downloaded.
 12. Enter `node index.js config/<YOUR GAME>.json` in the terminal from step 11.
 13. If you see "Connected to beam" you should be good to go.
 14. Test out your controls.
