@@ -151,6 +151,9 @@ function tactileDecisionMaker(keyObj, quorum) {
 }
 
 function createProgressForKey(keyObj,result) {
+    if (!keyObj || !keyObj.id) {
+        return;
+    }
     return new Packets.ProgressUpdate.TactileUpdate({
         id: keyObj.id,
         cooldown:0,
