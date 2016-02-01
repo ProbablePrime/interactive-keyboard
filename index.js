@@ -168,6 +168,11 @@ function setKeyState(users,keyObj) {
     //Pull the code from our map of ids -> codes
     keyObj.code = getKeyCodeForID(keyObj.id);
 
+    //get rid of incorrectly created keys
+    if(!keyObj.code) {
+        return;
+    }
+
     //Keep a list of keys that we need to clear when
     //there's a lack of input.
     //We do it via ids
@@ -194,21 +199,22 @@ function setKeyState(users,keyObj) {
 }
 
 function handleTactile(tactile, users) {
+    if(!tactile) {
+        tactile = [];
+    }
+
     var progress = tactile.map(setKeyState.bind(this,users));
 
     //Remove undefineds from map
     progress = progress.filter(function(progress){
         return progress !== undefined;
-    })
-
-    if(!tactile) {
-        tactile = [];
-    }
+    });
 
     //Don't send progress updates we don't need
     if(!progress.length) {
         return;
     }
+
     if(robot !== null) {
         var args = {
             joystick:[],
@@ -279,10 +285,7 @@ function goInteractive(versionCode,shareCode) {
         interactive: true,
         tetrisGameId: versionCode,
         tetrisShareCode: shareCode
-     },json:true}).then(function(res){
-     }, function(err){
-        //console.log(err);
-     });
+     },json:true});
 }
 
 var map = {};
@@ -298,9 +301,15 @@ function buildControlMap(channelID) {
     beam.request('GET','tetris/'+channelID)
     .then(function(res){
         var controls = res.body.version.controls.tactiles;
-        controls.forEach(function(tactile) {
-            map[tactile.id] = tactile.key;
-        });
+        if(controls && controls.length) {
+            controls.forEach(function(tactile) {
+                if(tactile.key) {
+                    map[tactile.id] = tactile.key;
+                }
+            });
+        } else {
+            throw new Error('Incorrect version id or share code in your config or no control layout saved for that version.');
+        }
         return map;
     });
 }
@@ -380,7 +389,6 @@ function go(id) {
         } else {
             throw err;
         }
-        //console.log(err);
     });
 }
 
