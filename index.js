@@ -7,6 +7,7 @@ var widgets = require('./lib/widgets');
 
 //Transforms codes(65) into key names(A) and visa versa
 var keycode = require('keycode');
+var equal = require('deep-equal');
 
 var args = process.argv.slice(2);
 
@@ -113,6 +114,10 @@ function handleReport(report) {
     //if no users are playing or there's a brief absence of activity
     //the reports contain no data in the tactile/joystick array. So we detect if there's data
     //before attempting to process it
+    if(!equal(report.users.qgram, state.qgram)) {
+        widgets(state);
+        state.qgram = report.users.qgram;
+    }
 
     if(report.tactile.length && report.users.quorum > 0) {
         recievingReports = true;
@@ -264,7 +269,6 @@ function handleTactile(tactile, users) {
     if(!tactile) {
         tactile = [];
     }
-    state.qgram = users.qgram;
     var progress = tactile.map(setKeyState.bind(this,users));
 
     //Remove undefineds from map
