@@ -58,7 +58,10 @@ var keysToClear = [];
 
 var channelID = 0;
 
-var state = {};
+var state = {
+    tactiles:{},
+    qgram:[]
+};
 
 /* My onscreen controls are likely to be controls a player(streamer) might use if they don't have a gamepad.
    So we remap keys from the report to lesser used keys here. Ideally id like to emulate a HID and pass beam events through that.
@@ -153,6 +156,8 @@ function tactileDecisionMaker(keyObj, quorum) {
 
     var ret = {
         action: false,
+        code:keyObj.orginal,
+        name:keycode(keyObj.original),
         percentHolding:0,
         percentPushing:0,
         percentReleasing:0
@@ -197,6 +202,18 @@ function createProgressForKey(keyObj,result) {
     });
 }
 
+
+function getStateForKey(keyCode) {
+    if(state.tactiles[keyCode]){
+        return state.tactiles[keyCode].action;
+    }
+    return false;
+}
+
+function setStateForKey(keyCode,newState) {
+    state.tactiles[keyCode] = newState;
+}
+
 /**
  * Workout for each key if it should be pushed or unpushed according to the report.
  * @param {[type]} keyObj [description]
@@ -227,16 +244,15 @@ function setKeyState(users,keyObj) {
 
     var decision = tactileDecisionMaker(keyObj, users.active);
     if(decision !== null && decision.action !== null) {
-        if(state[keyObj.original] !== decision.action) {
+        if(getStateForKey(keyObj.original) !== decision.action) {
             console.log(keycode(keyObj.original), decision.action,
                 ' U'+ users.active,
                 ' %s:',
                 ' H'+decision.percentHolding,
                 ' P'+decision.percentPushing,
                 ' R'+decision.percentReleasing);
-
             setKey(keyObj.code, decision);
-            state[keyObj.original] = decision.action;
+            setStateForKey(keyObj.original, decision);
 
             return createProgressForKey(keyObj, decision);
         }
@@ -247,7 +263,7 @@ function handleTactile(tactile, users) {
     if(!tactile) {
         tactile = [];
     }
-
+    state.qgram = users.qgram;
     var progress = tactile.map(setKeyState.bind(this,users));
 
     //Remove undefineds from map
@@ -283,11 +299,9 @@ function setKeys(keys, status, remap) {
     if(robot !== null) {
         var args = {
             joystick:[],
-            tactile: codes
+            tactile: progressArray
         };
-        robot.send(new Packets.ProgressUpdate({
-           tactile: codes
-        }));
+        robot.send(new Packets.ProgressUpdate(args));
     }
 
     keys = keys.map(getKeyCodeForID);
