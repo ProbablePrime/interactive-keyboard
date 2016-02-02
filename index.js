@@ -138,13 +138,27 @@ function watchDog() {
     if(!recievingReports) {
         if(dogCount === 5) {
             console.log('clearing player input due to lack of reports.');
-            setKeys(Object.keys(map), false, config.remap);
+            clearKeys();
         }
         dogCount = dogCount + 1;
     } else {
         dogCount = 0;
     }
 }
+
+function clearKeys() {
+    setKeys(Object.keys(map), false, config.remap);
+}
+//clear the keys on exit?? Ctrl+C doesn't appear to send this event
+process.on('exit', function() {
+    console.log('clearing your keys');
+    clearKeys();
+});
+process.on('SIGINT', function() {
+    console.log('clearing your keys');
+    clearKeys();
+    process.exit();
+});
 
 /**
  * Given a report, workout what should happen to the key.
