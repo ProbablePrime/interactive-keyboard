@@ -126,7 +126,7 @@ function watchDog() {
     if(!recievingReports) {
         if(dogCount === 5) {
             console.log('clearing player input due to lack of reports.');
-            setKeys(keysToClear, false, config.remap);
+            setKeys(Object.keys(map), false, config.remap);
         }
         dogCount = dogCount + 1;
     } else {
@@ -140,25 +140,60 @@ function watchDog() {
  * @return {Boolean} true to push AND HOLD the button, false to let go. null to do nothing.
  */
 function tactileDecisionMaker(keyObj, quorum) {
-    //Using similar processing to Matt's Eurotruck
-    if(!quorum || keyObj.holding === null) {
-        return null;
+
+    if(keyObj.holding === null) {
+        keyObj.holding = 0;
     }
-    if(keyObj.holding >= quorum / 2) {
-        return true;
+    if(keyObj.pressFrequency === null) {
+        keyObj.pressFrequency = 0;
     }
-    return false;
+    if(keyObj.releaseFrequency === null) {
+        keyObj.releaseFrequency = 0;
+    }
+
+    var ret = {
+        action: false,
+        percentHolding:0,
+        percentPushing:0,
+        percentReleasing:0
+    };
+    if(quorum > 0) {
+        if(keyObj.holding > 0) {
+            ret.percentHolding = (keyObj.holding / quorum);
+        }
+        if(keyObj.pressFrequency > 0) {
+            ret.percentPushing = (keyObj.pressFrequency / quorum);
+        }
+        if(keyObj.releaseFrequency > 0) {
+            ret.percentReleasing = (keyObj.releaseFrequency / quorum);
+        }
+    }
+
+    if(!quorum) {
+        ret.action = null;
+    }
+
+    ret.progress = ret.percentHolding;
+
+    if(ret.percentHolding >= 0.5) {
+        ret.action = true;
+    }
+
+    return ret;
 }
 
 function createProgressForKey(keyObj,result) {
-    if (!keyObj || !keyObj.id) {
+    if (keyObj === undefined || !keyObj.id === undefined) {
         return;
+    }
+    if(typeof keyObj.id === "string") {
+        keyObj.id = parseInt(keyObj.id, 10);
     }
     return new Packets.ProgressUpdate.TactileUpdate({
         id: keyObj.id,
         cooldown:0,
-        fired: (result === 1) ? true : false,
-        progress: result
+        fired: result.action,
+        progress: result.progress
     });
 }
 
@@ -190,13 +225,20 @@ function setKeyState(users,keyObj) {
         keyObj.code = remapKey(keyObj.code);
     }
 
-    var decision = tactileDecisionMaker(keyObj, users.qgram[0].users);
-    if(decision !== null) {
-        if(state[keyObj.original] !== decision) {
-            console.log(keycode(keyObj.original), decision, 'Users: '+ users.qgram[0].users,'Holding: '+keyObj.holding);
+    var decision = tactileDecisionMaker(keyObj, users.active);
+    if(decision !== null && decision.action !== null) {
+        if(state[keyObj.original] !== decision.action) {
+            console.log(keycode(keyObj.original), decision.action,
+                ' U'+ users.active,
+                ' %s:',
+                ' H'+decision.percentHolding,
+                ' P'+decision.percentPushing,
+                ' R'+decision.percentReleasing);
+
             setKey(keyObj.code, decision);
-            state[keyObj.original] = decision;
-            return createProgressForKey(keyObj, (decision !== null && decision ) ? 1 : 0);
+            state[keyObj.original] = decision.action;
+
+            return createProgressForKey(keyObj, decision);
         }
     }
 }
@@ -233,26 +275,28 @@ function handleTactile(tactile, users) {
  * @param {Boolean} status status true to push AND HOLD the button, false to let go. null to do nothing.
  * @param {Boolean} remap  True to also run the keys through the remapping routine.
  */
-function setKeys(keys,status,remap) {
-    var codes = keys.map(function(key) {
-        return keycode(key);
+function setKeys(keys, status, remap) {
+    var progressArray = [];
+    keys.forEach(function(value) {
+        progressArray.push(createProgressForKey({id:value}, {action:status, progress:(status) ? 1 : 0}));
     });
+    if(robot !== null) {
+        var args = {
+            joystick:[],
+            tactile: codes
+        };
+        robot.send(new Packets.ProgressUpdate({
+           tactile: codes
+        }));
+    }
+
+    keys = keys.map(getKeyCodeForID);
     if(remap) {
         keys = keys.map(remapKey);
     }
     keys.forEach(function(key) {
         setKey(key,status);
     });
-
-    codes = codes.map(function(value) {
-        return createProgressForKey(value, (status) ? 1 : 0);
-    });
-
-    if(robot !== null) {
-        // robot.send(new Packets.ProgressUpdate({
-        //     tactile: codes
-        // }));
-    }
 }
 
 function setKey(key,status) {
@@ -302,7 +346,7 @@ function getKeyCodeForID(id) {
  */
 function buildControlMap(channelID) {
     beam.request('GET','tetris/'+channelID)
-    .then(function(res){
+    .then(function(res) {
         var controls = res.body.version.controls.tactiles;
         if(controls && controls.length) {
             controls.forEach(function(tactile) {
@@ -348,12 +392,12 @@ function setup() {
         if(!target) {
             target = config.beam.username;
         }
-        console.log('getting '+ target);
+        console.log('Using '+ target);
         getChannelID(target).then(function(result) {
             if(result) {
                 go(result);
             }
-        }, function(e){
+        }, function(e) {
             console.log('Invalid channel specified in config file, or no channel found on beam');
             process.exit();
         })
@@ -372,16 +416,17 @@ function go(id) {
     }).then(function () {
         return beam.game.join(id);
     }).then(function (details) {
+        console.log('Authenticated, Spinning up Tetris Connection');
         details = details.body;
         details.remote = details.address;
         details.channel = id;
         robot = new Tetris.Robot(details);
         robot.handshake(function(err){
             if(err) {
-                console.log('Theres a problem connecting to beam, show this to a codey person');
+                console.log('Theres a problem connecting to tetris, show this to a codey person');
                 console.log(err);
             } else {
-                console.log('Connected to Beam');
+                console.log('Connected to Tetris');
             }
         });
         robot.on('report',handleReport);
