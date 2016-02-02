@@ -198,13 +198,16 @@ function tactileDecisionMaker(keyObj, quorum) {
     }
 
     if(!quorum) {
-        ret.action = null;
+       ret.action = null;
     }
 
     ret.progress = ret.percentHolding;
 
     if(ret.percentHolding >= 0.5) {
         ret.action = true;
+    }
+    if(ret.percentReleasing >= 0.5) {
+        ret.action = false;
     }
 
     return ret;
@@ -225,15 +228,27 @@ function createProgressForKey(keyObj,result) {
     });
 }
 
+function createState(keyCode) {
+    return state.tactiles[keyCode] = {
+        action: false,
+        code:keyCode,
+        name:keyCode,
+        percentHolding:0,
+        percentPushing:0,
+        percentReleasing:0
+    }
+}
+
 
 function getStateForKey(keyCode) {
     if(state.tactiles[keyCode]){
-        return state.tactiles[keyCode].action;
+        return state.tactiles[keyCode];
     }
-    return false;
+    return createState(keyCode);
 }
 
 function setStateForKey(keyCode,newState) {
+    //console.log(arguments);
     state.tactiles[keyCode] = newState;
     if(widgets) {
         widgets(state);
@@ -262,6 +277,7 @@ function setKeyState(users,keyObj) {
     }
 
     keyObj.original = keyObj.code;
+    keyObj.name= keycode(keyObj.original);
 
     //Remappa if enabled
     if(config.remap) {
@@ -270,10 +286,10 @@ function setKeyState(users,keyObj) {
 
     var decision = tactileDecisionMaker(keyObj, users.active);
     if(decision !== null && decision.action !== null) {
-        if(getStateForKey(keyObj.original) !== decision.action) {
-            setKey(keyObj.code, decision);
-            setStateForKey(keyObj.original, decision);
-
+        var state = getStateForKey(keyObj.name);
+        if(state !== undefined && state.action !== decision.action) {
+            setKey(keyObj.code, decision.action);
+            setStateForKey(keyObj.name, decision);
             return createProgressForKey(keyObj, decision);
         }
     }
@@ -385,14 +401,7 @@ function buildControlMap(channelID) {
             controls.forEach(function(tactile) {
                 if(tactile.key) {
                     map[tactile.id] = tactile.key;
-                    state.tactiles[tactile.key] = {
-                        action: false,
-                        code:tactile.key,
-                        name:keycode(tactile.key),
-                        percentHolding:0,
-                        percentPushing:0,
-                        percentReleasing:0
-                    }
+                    createState(keycode(tactile.key));
                 }
             });
         } else {
