@@ -367,6 +367,14 @@ function buildControlMap(channelID) {
             controls.forEach(function(tactile) {
                 if(tactile.key) {
                     map[tactile.id] = tactile.key;
+                    state.tactiles[tactile.key] = {
+                        action: false,
+                        code:tactile.key,
+                        name:keycode(tactile.key),
+                        percentHolding:0,
+                        percentPushing:0,
+                        percentReleasing:0
+                    }
                 }
             });
         } else {
