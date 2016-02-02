@@ -1,6 +1,10 @@
 var Beam = require('beam-client-node');
 var Tetris = require('beam-interactive-node');
 
+var clear = require('clear');
+
+var widgets = require('./lib/widgets');
+
 //Transforms codes(65) into key names(A) and visa versa
 var keycode = require('keycode');
 
@@ -164,13 +168,13 @@ function tactileDecisionMaker(keyObj, quorum) {
     };
     if(quorum > 0) {
         if(keyObj.holding > 0) {
-            ret.percentHolding = (keyObj.holding / quorum);
+            ret.percentHolding = Math.abs(keyObj.holding / quorum);
         }
         if(keyObj.pressFrequency > 0) {
-            ret.percentPushing = (keyObj.pressFrequency / quorum);
+            ret.percentPushing = Math.abs(keyObj.pressFrequency / quorum);
         }
         if(keyObj.releaseFrequency > 0) {
-            ret.percentReleasing = (keyObj.releaseFrequency / quorum);
+            ret.percentReleasing = Math.abs(keyObj.releaseFrequency / quorum);
         }
     }
 
@@ -212,6 +216,9 @@ function getStateForKey(keyCode) {
 
 function setStateForKey(keyCode,newState) {
     state.tactiles[keyCode] = newState;
+    if(widgets) {
+        widgets(state);
+    }
 }
 
 /**
@@ -245,12 +252,6 @@ function setKeyState(users,keyObj) {
     var decision = tactileDecisionMaker(keyObj, users.active);
     if(decision !== null && decision.action !== null) {
         if(getStateForKey(keyObj.original) !== decision.action) {
-            console.log(keycode(keyObj.original), decision.action,
-                ' U'+ users.active,
-                ' %s:',
-                ' H'+decision.percentHolding,
-                ' P'+decision.percentPushing,
-                ' R'+decision.percentReleasing);
             setKey(keyObj.code, decision);
             setStateForKey(keyObj.original, decision);
 
@@ -441,6 +442,7 @@ function go(id) {
                 console.log(err);
             } else {
                 console.log('Connected to Tetris');
+                clear();
             }
         });
         robot.on('report',handleReport);
