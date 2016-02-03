@@ -10,12 +10,12 @@ Video Coming Soon!
 
 1. Pick a keyboard controlled game. Any game that allows configureable controls will work yes *ANY*.
 2. Make a Controls layout for that game in the Beam Controls Editor
-3. Get yourself [Nodejs](http://Nodejs.org)
+3. Get yourself [Nodejs](http://Nodejs.org) version 4.x and above is **required** check with `node -v`
 4. Download this project as a zip file
 5. Unzip it.
 6. Open a terminal/cmd in its folder
 7. Enter npm install. This will install project dependancies
-8. Choose a keyboard handler, I reccomend robotjs. There are other easier to install handlers described in the Handlers section below.
+8. Choose a keyboard handler see the [Handlers](README.md#handlers) section, I reccomend robotjs. There are other easier to install handlers described in the Handlers section below.
 9. Install your handler with `npm install robotjs`
 10. Write a config file in config/ called <YOUR GAME>.json example `config/pokemon.json` follow the sample one for a guide. A video is coming soon.
 11. Start your chosen game, Open a cmd/terminal in the folder you downloaded.
@@ -84,6 +84,22 @@ Place these in your config file:
     "version":<versionid>,
     "code":"<sharecode>",
 ```
+
+# Handlers
+
+3 Handlers are provided to do the actual keypressing when keys are recieved from Beam. They are in order of most reccomended to least:
+
+* robotjs
+* keyboardz
+* kbm-robot
+
+Installing robotjs on windows might be a bit problematic as it requires a valid node-gyp setup. see [this github issues](https://github.com/nodejs/node-gyp/issues/629). Alternatively you can use other supported handlers.
+
+To use a handler for your game install it in the same folder as this project with `npm install` so if you chose keyboardz that would be `npm install keyboardz`. Then in your config file change the `"handler":"robotjs",` to `"handler":"keyboardz",`.
+
+## A Warning about kbm-robot
+
+kbm-robot was the intial handler for this project but keys would become stuck after 30 minutes of play. I've attempted to rectify this with a timer that restarts some kbm-robot internals. Please **DO NOT** use kbm-robot on an un-supervised stream. Unfourtunately kbm-robot is also the only handler capable of emitting `DirectX/XInput` compatible events. If your target game uses them robotjs and keyboardz might not work. 
 
 # Metric / Maths
 With potentially 100s of people pushing the buttons we need some way to decide if a button should be pushed. 
