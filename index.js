@@ -142,6 +142,7 @@ function watchDog() {
         }
         dogCount = dogCount + 1;
     } else {
+        recievingReports = false;
         dogCount = 0;
     }
 }
@@ -201,7 +202,7 @@ function tactileDecisionMaker(keyObj, quorum) {
        ret.action = null;
     }
 
-    ret.progress = ret.percentHolding;
+    ret.progress = Math.min(ret.percentHolding,1);
 
     if(ret.percentHolding >= 0.5) {
         ret.action = true;
@@ -343,9 +344,16 @@ function setKeys(keys, status, remap) {
     if(remap) {
         keys = keys.map(remapKey);
     }
+
     keys.forEach(function(key) {
+        if(getStateForKey(keycode(key)) !== undefined) {
+            state.tactiles[keycode(key)].action = false;
+        } else {
+            createState(keycode(key));
+        }
         setKey(key,status);
     });
+    widgets(state);
 }
 
 function setKey(key,status) {
