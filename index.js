@@ -349,14 +349,14 @@ function setKeys(keyIds, status, remap) {
         robot.send(new Packets.ProgressUpdate(args));
     }
 
-    keyNames = keys.map(function(keyName){
+    keyNames = keyIds.map(function(keyName){
         return keycode(getKeyCodeForID(keyName));
     });
     if(remap) {
         keyNames = keyNames.map(remapKey);
     }
 
-    keysNames.forEach(function(keyName) {
+    keyNames.forEach(function(keyName) {
         var keyState = getStateForKey(keyName);
         keyState.action = false;
         keyState.progress = 0;
