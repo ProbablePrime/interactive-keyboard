@@ -4,6 +4,7 @@ var Tetris = require('beam-interactive-node');
 var clear = require('clear');
 
 var widgets = require('./lib/widgets');
+//var widgets = function() {};
 
 //Transforms codes(65) into key names(A) and visa versa
 var keycode = require('keycode');
@@ -58,14 +59,12 @@ var beam = new Beam();
 
 var robot = null;
 
-var recievingReports = true;
-var keysToClear = [];
-
 var channelID = 0;
 
 var state = {
     tactiles:{},
-    qgram:[]
+    qgram:[],
+    status:''
 };
 
 /* My onscreen controls are likely to be controls a player(streamer) might use if they don't have a gamepad.
@@ -110,40 +109,36 @@ function remapKey(code) {
  * @param  {Object} report 
  */
 function handleReport(report) {
-    //console.log(report)
-    //if no users are playing or there's a brief absence of activity
-    //the reports contain no data in the tactile/joystick array. So we detect if there's data
-    //before attempting to process it
+    //Always try and keep the qgram up to date, but don't spam update it
+    //Check if the stored qgram = the new qgram.
     if(!equal(report.users.qgram, state.qgram)) {
         widgets(state);
         state.qgram = report.users.qgram;
     }
 
+    //if no users are playing or there's a brief absence of activity
+    //the reports contain no data in the tactile/joystick array. So we detect if there's data
+    //before attempting to process it
     if(report.tactile.length && report.users.quorum > 0) {
-        recievingReports = true;
         handleTactile(report.tactile,report.users);
     } else {
-        recievingReports = false;
-    }
-}
-
-/**
- * Watchdog gets called every 500ms to check the status of the reports coming into us from beam.
- * If we havent had any reports that contained usable data in (5 * 500ms)(2.5s) we clear all the
- * inputs that the game uses. This allows the second "player"(controlled by beam to not continue).
- * Stopping and standing still seemed to be better than "CONTINUE RUNNING YAY"
- * @return {[type]} [description]
- */
-function watchDog() {
-    if(!recievingReports) {
-        if(dogCount === 5) {
-            console.log('clearing player input due to lack of reports.');
-            clearKeys();
+        //I don't like this, need to refactor this if it fixes stuck keys
+        var touchedAKey = false;
+        Object.keys(state.tactiles)
+        .forEach(function(key){
+            var tactile = state.tactiles[key];
+            if(tactile.action) {
+                tactile.action = false;
+                tactile.percentHolding = 0;
+                tactile.percentReleasing = 1;
+                tactile.percentPushing = 0;
+                touchedAKey = true;
+                setKey(tactile.name,false);
+            }
+        });
+        if(touchedAKey) {
+            widgets(state);
         }
-        dogCount = dogCount + 1;
-    } else {
-        recievingReports = false;
-        dogCount = 0;
     }
 }
 
@@ -161,13 +156,8 @@ process.on('SIGINT', function() {
     process.exit();
 });
 
-/**
- * Given a report, workout what should happen to the key.
- * @param  {Object} keyObj Directly from the report.tactile array
- * @return {Boolean} true to push AND HOLD the button, false to let go. null to do nothing.
- */
-function tactileDecisionMaker(keyObj, quorum) {
 
+function updateState(keyObj,quorum) {
     if(keyObj.holding === null) {
         keyObj.holding = 0;
     }
@@ -178,44 +168,66 @@ function tactileDecisionMaker(keyObj, quorum) {
         keyObj.releaseFrequency = 0;
     }
 
-    var ret = {
-        action: false,
-        code:keyObj.orginal,
-        name:keycode(keyObj.original),
-        percentHolding:0,
-        percentPushing:0,
-        percentReleasing:0
-    };
+    var ret = getStateForKey(keyObj.name);
+
+    //We don't use these right now in our decision but good for people who want
+    //to hack
+    ret.pressFrequency = keyObj.pressFrequency;
+    ret.releaseFrequency = keyObj.releaseFrequency;
+    ret.holding = keyObj.holding;
+
+    //Most of this block guards against dividing by 0 and negative percentages
+    //which make the progress bar go backwards
     if(quorum > 0) {
         if(keyObj.holding > 0) {
             ret.percentHolding = Math.abs(keyObj.holding / quorum);
+        } else {
+            ret.percentHolding = 0;
         }
         if(keyObj.pressFrequency > 0) {
             ret.percentPushing = Math.abs(keyObj.pressFrequency / quorum);
+        } else {
+            ret.percentPushing = 0;
         }
         if(keyObj.releaseFrequency > 0) {
             ret.percentReleasing = Math.abs(keyObj.releaseFrequency / quorum);
+        } else {
+            ret.percentReleasing = 0;
         }
+    } else {
+        ret.percentReleasing = 0;
+        ret.percentHolding = 0;
+        ret.percentPushing = 0;
     }
-
-    if(!quorum) {
-       ret.action = null;
-    }
-
-    ret.progress = Math.min(ret.percentHolding,1);
-
-    if(ret.percentHolding >= 0.5) {
-        ret.action = true;
-    }
-    if(ret.percentReleasing >= 0.5) {
-        ret.action = false;
-    }
-
     return ret;
+}
+
+/**
+ * Given a report, workout what should happen to the key.
+ * @param  {Object} keyObj Directly from the report.tactile array
+ * @return {Boolean} true to push AND HOLD the button, false to let go. null to do nothing.
+ */
+function tactileDecisionMaker(keyState, quorum) {
+    var decision = {
+        action: false,
+        progress:0
+    };
+
+    decision.progress = Math.min(keyState.percentHolding,1);
+
+    if(keyState.percentHolding >= 0.5) {
+        decision.action = true;
+    }
+    if(keyState.percentReleasing >= 0.5) {
+        decision.action = false;
+    }
+
+    return decision;
 }
 
 function createProgressForKey(keyObj,result) {
     if (keyObj === undefined || !keyObj.id === undefined) {
+        console.log('Cannot create progress event for invalid key');
         return;
     }
     if(typeof keyObj.id === "string") {
@@ -229,11 +241,11 @@ function createProgressForKey(keyObj,result) {
     });
 }
 
-function createState(keyCode) {
-    return state.tactiles[keyCode] = {
+function createState(keyName) {
+    return state.tactiles[keyName] = {
         action: false,
-        code:keyCode,
-        name:keyCode,
+        code:keycode(keyName),
+        name:keyName,
         percentHolding:0,
         percentPushing:0,
         percentReleasing:0
@@ -241,40 +253,26 @@ function createState(keyCode) {
 }
 
 
-function getStateForKey(keyCode) {
-    if(state.tactiles[keyCode]){
-        return state.tactiles[keyCode];
+function getStateForKey(keyName) {
+    if(state.tactiles[keyName]){
+        return state.tactiles[keyName];
     }
-    return createState(keyCode);
-}
-
-function setStateForKey(keyCode,newState) {
-    //console.log(arguments);
-    state.tactiles[keyCode] = newState;
-    if(widgets) {
-        widgets(state);
-    }
+    return createState(keyName);
 }
 
 /**
  * Workout for each key if it should be pushed or unpushed according to the report.
  * @param {[type]} keyObj [description]
  */
-function setKeyState(users,keyObj) {
+function updateKey(users,keyObj) {
 
     //Pull the code from our map of ids -> codes
     keyObj.code = getKeyCodeForID(keyObj.id);
 
     //get rid of incorrectly created keys
     if(!keyObj.code) {
+        console.warn('No keycode for ' + keyObj.id);
         return;
-    }
-
-    //Keep a list of keys that we need to clear when
-    //there's a lack of input.
-    //We do it via ids
-    if(keysToClear.indexOf(keycode(keyObj.code)) === -1) {
-        keysToClear.push(keycode(keyObj.code));
     }
 
     keyObj.original = keyObj.code;
@@ -284,23 +282,31 @@ function setKeyState(users,keyObj) {
     if(config.remap) {
         keyObj.code = remapKey(keyObj.code);
     }
-
-    var decision = tactileDecisionMaker(keyObj, users.active);
+    var keyState = updateState(keyObj,users.quorum);
+    var decision = tactileDecisionMaker(keyState, users.active);
     if(decision !== null && decision.action !== null) {
-        var state = getStateForKey(keyObj.name);
-        if(state !== undefined && state.action !== decision.action) {
-            setKey(keyObj.code, decision.action);
-            setStateForKey(keyObj.name, decision);
+        if(keyState.action !== decision.action) {
+            setKey(keyObj.name, decision.action);
+            keyState.action = decision.action;
+            if(widgets) {
+                widgets(state);
+            }
             return createProgressForKey(keyObj, decision);
         }
+        var ret;
+        if(decision.progress !== keyState.progress || keyState.action !== decision.action) {
+            ret = createProgressForKey(keyObj, decision);
+        }
+        keyState.progress = decision.progress;
+        return ret;
     }
 }
 
 function handleTactile(tactile, users) {
     if(!tactile) {
-        tactile = [];
+        return;
     }
-    var progress = tactile.map(setKeyState.bind(this,users));
+    var progress = tactile.map(updateKey.bind(this,users));
 
     //Remove undefineds from map
     progress = progress.filter(function(progress){
@@ -326,10 +332,13 @@ function handleTactile(tactile, users) {
  * @param {String[]|Number[]} keys   Keys to modify
  * @param {Boolean} status status true to push AND HOLD the button, false to let go. null to do nothing.
  * @param {Boolean} remap  True to also run the keys through the remapping routine.
+ * @todo This is a mess and is only used in one place, setKeys should go back
+ * to its roots and just set each key in the input array to false. 
+ * Right now it only takes IDs
  */
-function setKeys(keys, status, remap) {
+function setKeys(keyIds, status, remap) {
     var progressArray = [];
-    keys.forEach(function(value) {
+    keyIds.forEach(function(value) {
         progressArray.push(createProgressForKey({id:value}, {action:status, progress:(status) ? 1 : 0}));
     });
     if(robot !== null) {
@@ -340,39 +349,43 @@ function setKeys(keys, status, remap) {
         robot.send(new Packets.ProgressUpdate(args));
     }
 
-    keys = keys.map(getKeyCodeForID);
+    keyNames = keys.map(function(keyName){
+        return keycode(getKeyCodeForID(keyName));
+    });
     if(remap) {
-        keys = keys.map(remapKey);
+        keyNames = keyNames.map(remapKey);
     }
 
-    keys.forEach(function(key) {
-        if(getStateForKey(keycode(key)) !== undefined) {
-            state.tactiles[keycode(key)].action = false;
-        } else {
-            createState(keycode(key));
-        }
-        setKey(key,status);
+    keysNames.forEach(function(keyName) {
+        var keyState = getStateForKey(keyName);
+        keyState.action = false;
+        keyState.progress = 0;
+        setKey(keyName,status);
     });
     widgets(state);
 }
-
-function setKey(key,status) {
-
-    //Beam reports back keycodes, convert them to keynames, which robotjs accepts
-    if(typeof key === 'number') {
-        key = keycode(key);
+/**
+ * Given a key name set it to the apropriate status
+ * @param {String} keyName The key name, "W" and not 87
+ * @param {Boolean} status  true to push the key, false to release
+ */
+function setKey(keyName,status) {
+    //Beam reports back keycodes, convert them to keynames, which our handlers accept
+    if(typeof keyName === 'number') {
+        console.log('warning setting by number');
+        keyName = keycode(keyName);
     }
 
     //Something in remapping or handling sometimes makes this undefined
     //It causes an error to proceed so we'll stop here
-    if(!key) {
+    if(!keyName) {
         return;
     }
 
     if(status) {
-        controls.press(key.toUpperCase());
+        controls.press(keyName.toUpperCase());
     } else {
-        controls.release(key.toLowerCase());
+        controls.release(keyName.toUpperCase());
     }
 }
 
@@ -396,6 +409,18 @@ var map = {};
 function getKeyCodeForID(id) {
     return map[id];
 }
+function getIDForKeyCode(keyCode) {
+    return Object.keys(map).find(function(id){
+        return map[id] === keyCode;
+    })
+}
+
+function status(msg) {
+    var now = new Date().toLocaleString();
+    state.status = now + ' ' + msg;
+    widgets(state);
+}
+
 /**
  * The new controls editor/controls protocol doesn't send down the keycode.
  * Pull the controls grid that players see from beam, build a map of, button id -> keycode
@@ -489,13 +514,13 @@ function go(id) {
             }
         });
         robot.on('report',handleReport);
-        setInterval(watchDog,500);
     }).catch(function(err){
         if(err.message !== undefined && err.message.body !== undefined) {
             err = err.message.body;
         } else {
             throw err;
         }
+        console.log(err);
     });
 }
 
