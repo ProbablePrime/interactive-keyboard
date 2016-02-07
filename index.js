@@ -33,6 +33,20 @@ try {
     }
     process.exit();
 }
+var authConfig;
+try {
+    authConfig = require('./config/auth.json');
+    if(authConfig) {
+        if(!config.beam) {
+            config.beam = {};
+        }
+        config.beam.username = authConfig.username;
+        config.beam.password = authConfig.password;
+        config.beam.channel = authConfig.channel;
+    }
+} catch(e) {
+
+}
 
 //Remapping is now optional
 if(!config.remap) {
@@ -60,6 +74,14 @@ var beam = new Beam();
 var robot = null;
 
 var channelID = 0;
+
+var blocks = {
+    "start":"select",
+    "select":"start"
+};
+if(config.blocks) {
+    blocks = config.blocks;
+}
 
 var state = {
     tactiles:{},
@@ -211,10 +233,8 @@ function doBlock(keyState,decision,a,b) {
     }
     return decision;
 }
-var blocks = {
-    "start":"select",
-    "select":"start"
-};
+
+
 
 function doBlocks(keyState,decision) {
     Object.keys(blocks).forEach(function(blockA){
@@ -236,10 +256,10 @@ function tactileDecisionMaker(keyState, quorum) {
 
     decision.progress = Math.min(keyState.percentHolding,1);
 
-    if(keyState.percentHolding >= 0.5) {
+    if(keyState.percentHolding >= tactileThreshold) {
         decision.action = true;
     }
-    if(keyState.percentReleasing >= 0.5) {
+    if(keyState.percentReleasing >= tactileThreshold) {
         decision.action = false;
     }
     decision = doBlocks(keyState,decision);
