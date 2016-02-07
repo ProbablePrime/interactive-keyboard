@@ -201,6 +201,27 @@ function updateState(keyObj,quorum) {
     }
     return ret;
 }
+function doBlock(keyState,decision,a,b) {
+    if(keyState.label.toLowerCase() === a) {
+        var startState = getStateForLabel(b);
+        if(startState && startState.action) {
+            decision.action = false;
+            decision.progress = 0;
+        }
+    }
+    return decision;
+}
+var blocks = {
+    "start":"select",
+    "select":"start"
+};
+
+function doBlocks(keyState,decision) {
+    Object.keys(blocks).forEach(function(blockA){
+        decision = doBlock(keyState, decision, blockA, blocks[blockA])
+    });
+    return decision;
+}
 
 /**
  * Given a report, workout what should happen to the key.
@@ -221,6 +242,7 @@ function tactileDecisionMaker(keyState, quorum) {
     if(keyState.percentReleasing >= 0.5) {
         decision.action = false;
     }
+    decision = doBlocks(keyState,decision);
 
     return decision;
 }
@@ -241,11 +263,13 @@ function createProgressForKey(keyObj,result) {
     });
 }
 
-function createState(keyName) {
+function createState(keyName, text, id) {
     return state.tactiles[keyName] = {
         action: false,
+        id:id,
         code:keycode(keyName),
         name:keyName,
+        label:text || '',
         percentHolding:0,
         percentPushing:0,
         percentReleasing:0
@@ -260,12 +284,23 @@ function getStateForKey(keyName) {
     return createState(keyName);
 }
 
+function getStateForLabel(label) {
+    label = label.toLowerCase();
+    var target;
+    Object.keys(state.tactiles).forEach(function(key){
+        var tactile = state.tactiles[key];
+        if(tactile.label.toLowerCase() === label) {
+            target = tactile;
+        }
+    });
+    return target;
+}
 /**
  * Workout for each key if it should be pushed or unpushed according to the report.
  * @param {[type]} keyObj [description]
  */
-function updateKey(users,keyObj) {
 
+function updateStates(users,keyObj) {
     //Pull the code from our map of ids -> codes
     keyObj.code = getKeyCodeForID(keyObj.id);
 
@@ -282,20 +317,23 @@ function updateKey(users,keyObj) {
     if(config.remap) {
         keyObj.code = remapKey(keyObj.code);
     }
-    var keyState = updateState(keyObj,users.quorum);
+    return updateState(keyObj,users.quorum);
+}
+
+function updateKey(users,keyState) {
     var decision = tactileDecisionMaker(keyState, users.active);
     if(decision !== null && decision.action !== null) {
         if(keyState.action !== decision.action) {
-            setKey(keyObj.name, decision.action);
+            setKey(keyState.name, decision.action);
             keyState.action = decision.action;
             if(widgets) {
                 widgets(state);
             }
-            return createProgressForKey(keyObj, decision);
+            return createProgressForKey(keyState, decision);
         }
         var ret;
         if(decision.progress !== keyState.progress || keyState.action !== decision.action) {
-            ret = createProgressForKey(keyObj, decision);
+            ret = createProgressForKey(keyState, decision);
         }
         keyState.progress = decision.progress;
         return ret;
@@ -306,8 +344,11 @@ function handleTactile(tactile, users) {
     if(!tactile) {
         return;
     }
-    var progress = tactile.map(updateKey.bind(this,users));
-
+    //We update the states
+    var states = tactile.map(updateStates.bind(this,users));
+    //Then we workout each key, this allows us to factor in state when deciding
+    //which key to push
+    var progress = states.map(updateKey.bind(this,users));
     //Remove undefineds from map
     progress = progress.filter(function(progress){
         return progress !== undefined;
@@ -434,7 +475,7 @@ function buildControlMap(channelID) {
             controls.forEach(function(tactile) {
                 if(tactile.key) {
                     map[tactile.id] = tactile.key;
-                    createState(keycode(tactile.key));
+                    createState(keycode(tactile.key),tactile.text,tactile.id);
                 }
             });
         } else {

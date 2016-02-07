@@ -1,6 +1,6 @@
 {
-  "name": "beam-segacollection",
-  "version": "1.0.0",
+  "name": "beam-keyboard",
+  "version": "0.3.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -8,6 +8,10 @@
   },
   "author": "Richard Fox",
   "license": "  GPL-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ProbablePrime/beam-keyboard.git"
+  },
   "dependencies": {
     "beam-client-node": "0.1.0",
     "beam-interactive-node": "0.2.0",
