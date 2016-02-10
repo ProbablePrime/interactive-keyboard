@@ -114,12 +114,26 @@ Beam currently provides in each report:
 
 Based on that we have to make a decision. This code's current decision process is.
 
+* Calculate a percentage value for holding, releasing, pushing for this report
 * For Each Button:
-    * If the number of people holding the button down is greater or equal to half the people active 
-     on the grid at the time of the report.
+    * If the percent of people holding the button down this report is greater or equal to the threshold value(defaults to 50%)
     * Push the button.
+    * Else Release the button.
    
 If you can think of a better Metric. Please feel free to PR.
+
+# Blocks
+You can specify an optional configuration attribute called "blocks" which will block certain keys from being held down at the same time.
+
+For example:
+```
+"blocks": {
+  "start":"select",
+  "select":"start"
+}
+```
+Will prevent people from being able to push both select and start at the same time. This is helpful as it prevents soft resets.
+In older games.
 
 #Example Game Setups
 * [Sega Collection](docs/SegaCollection.MD)
