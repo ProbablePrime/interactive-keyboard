@@ -3,9 +3,6 @@ var Tetris = require('beam-interactive-node');
 
 var clear = require('clear');
 
-var widgets = require('./lib/widgets');
-//var widgets = function() {};
-
 //Transforms codes(65) into key names(A) and visa versa
 var keycode = require('keycode');
 var equal = require('deep-equal');
@@ -27,11 +24,10 @@ try {
     config = require(configFile);
 } catch(e) {
     if(e.code === 'MODULE_NOT_FOUND') {
-        console.log('Cannot find '+ configFile);
+        throw new Error('Cannot find '+ configFile);
     } else {
-        console.log('Your config file is incorrectly formatted, please check it at jsonlint.com');
+        throw new Error('Your config file is incorrectly formatted, please check it at jsonlint.com');
     }
-    process.exit();
 }
 var authConfig;
 try {
@@ -46,6 +42,12 @@ try {
     }
 } catch(e) {
 
+}
+var widgets;
+if(config.widgets === undefined || config.widgets) {
+    widgets = require('./lib/widgets');
+} else {
+    widgets = function() {};
 }
 
 //Remapping is now optional
@@ -74,11 +76,7 @@ var beam = new Beam();
 var robot = null;
 
 var channelID = 0;
-
-var blocks = {
-    "start":"select",
-    "select":"start"
-};
+var blocks = [];
 if(config.blocks) {
     blocks = config.blocks;
 }
@@ -178,17 +176,24 @@ process.on('SIGINT', function() {
     process.exit();
 });
 
+function nullToZero(value) {
+    if(value === null) {
+        return 0;
+    }
+    return value;
+}
+
+function percentage(value,total) {
+    if(total <= 0 || value <= 0) {
+        return 0;
+    }
+    return Math.abs(value / total);
+}
 
 function updateState(keyObj,quorum) {
-    if(keyObj.holding === null) {
-        keyObj.holding = 0;
-    }
-    if(keyObj.pressFrequency === null) {
-        keyObj.pressFrequency = 0;
-    }
-    if(keyObj.releaseFrequency === null) {
-        keyObj.releaseFrequency = 0;
-    }
+    keyObj.holding = nullToZero(keyObj.holding);
+    keyObj.pressFrequency = nullToZero(keyObj.pressFrequency);
+    keyObj.releaseFrequency = nullToZero(keyObj.releaseFrequency);
 
     var ret = getStateForKey(keyObj.name);
 
@@ -200,30 +205,15 @@ function updateState(keyObj,quorum) {
 
     //Most of this block guards against dividing by 0 and negative percentages
     //which make the progress bar go backwards
-    if(quorum > 0) {
-        if(keyObj.holding > 0) {
-            ret.percentHolding = Math.abs(keyObj.holding / quorum);
-        } else {
-            ret.percentHolding = 0;
-        }
-        if(keyObj.pressFrequency > 0) {
-            ret.percentPushing = Math.abs(keyObj.pressFrequency / quorum);
-        } else {
-            ret.percentPushing = 0;
-        }
-        if(keyObj.releaseFrequency > 0) {
-            ret.percentReleasing = Math.abs(keyObj.releaseFrequency / quorum);
-        } else {
-            ret.percentReleasing = 0;
-        }
-    } else {
-        ret.percentReleasing = 0;
-        ret.percentHolding = 0;
-        ret.percentPushing = 0;
-    }
+    ret.percentHolding = percentage(keyObj.holding, quorum);
+    ret.percentPushing = percentage(keyObj.pressFrequency, quorum);
+    ret.percentReleasing = percentage(keyObj.releaseFrequency, quorum);
+
     return ret;
 }
 function doBlock(keyState,decision,a,b) {
+    a = a.toLowerCase();
+    b = b.toLowerCase();
     if(keyState.label.toLowerCase() === a) {
         var startState = getStateForLabel(b);
         if(startState && startState.action) {
@@ -233,8 +223,6 @@ function doBlock(keyState,decision,a,b) {
     }
     return decision;
 }
-
-
 
 function doBlocks(keyState,decision) {
     Object.keys(blocks).forEach(function(blockA){
@@ -259,6 +247,11 @@ function tactileDecisionMaker(keyState, quorum) {
     if(keyState.percentHolding >= tactileThreshold) {
         decision.action = true;
     }
+    //TODO: This kind of prevents holds, I want to do it correctly
+    // if (quorum === 0) {
+    //     decision.action = false;
+    // }
+
     if(keyState.percentReleasing >= tactileThreshold) {
         decision.action = false;
     }
@@ -320,7 +313,18 @@ function getStateForLabel(label) {
  * @param {[type]} keyObj [description]
  */
 
+function shouldDisplay(keyObj) {
+    if(keyObj.pressFrequency !== null || keyObj.releaseFrequency !== null) {
+        return keyObj.pressFrequency !== 0 || keyObj.releaseFrequency !== 0;
+    }
+    return false;
+}
+
+
 function updateStates(users,keyObj) {
+    // if(keyObj.id === 0 && shouldDisplay(keyObj)) {
+    //     console.log(keyObj);
+    // }
     //Pull the code from our map of ids -> codes
     keyObj.code = getKeyCodeForID(keyObj.id);
 
@@ -360,12 +364,12 @@ function updateKey(users,keyState) {
     }
 }
 
-function handleTactile(tactile, users) {
-    if(!tactile) {
+function handleTactile(tactiles, users) {
+    if(!tactiles) {
         return;
     }
     //We update the states
-    var states = tactile.map(updateStates.bind(this,users));
+    var states = tactiles.map(updateStates.bind(this,users));
     //Then we workout each key, this allows us to factor in state when deciding
     //which key to push
     var progress = states.map(updateKey.bind(this,users));
@@ -482,43 +486,61 @@ function status(msg) {
     widgets(state);
 }
 
+function validateControls(controls) {
+    if (!controls.tactiles || controls.tactiles.length == 0) {
+        throw new Error("No buttons defined, please define some buttons in the beam lab");
+    }
+    var analysis = controls.tactiles.every(function(tactile) {
+        return (tactile.analysis.holding && tactile.analysis.frequency);
+    });
+    if (!analysis) {
+        throw new Error("Buttons require holding and frequency to be checked for analysis");
+    }
+
+    var keyCodes = controls.tactiles.every(function(tactile){
+        return (tactile.key != null && tactile.key >= 8 && tactile.key < 300);
+    });
+    if(!keyCodes) {
+        throw new Error("Some invalid keycodes were found in your beam controls. Check them at keycode.info");
+    }
+    return controls;
+}
+
+function getControls(channelID) {
+    return beam.request('GET','tetris/'+channelID)
+    .then(function(res) {
+        return res.body.version.controls;
+    },function() {
+       throw new Error('Incorrect version id or share code in your config or no control layout saved for that version.');
+    });
+}
+
 /**
  * The new controls editor/controls protocol doesn't send down the keycode.
  * Pull the controls grid that players see from beam, build a map of, button id -> keycode
  * @param  {Number} channelID
  */
-function buildControlMap(channelID) {
-    beam.request('GET','tetris/'+channelID)
-    .then(function(res) {
-        var controls = res.body.version.controls.tactiles;
-        if(controls && controls.length) {
-            controls.forEach(function(tactile) {
-                if(tactile.key) {
-                    map[tactile.id] = tactile.key;
-                    createState(keycode(tactile.key),tactile.text,tactile.id);
-                }
-            });
-        } else {
-            throw new Error('Incorrect version id or share code in your config or no control layout saved for that version.');
+function buildControlMap(controls) {
+    controls.tactiles.forEach(function(tactile) {
+        if(tactile.key) {
+            map[tactile.id] = tactile.key;
+            createState(keycode(tactile.key),tactile.text,tactile.id);
         }
-        return map;
     });
+    return map;
 }
 
 function validateConfig() {
      if(!config) {
-        console.log('Missing config file cannot proceed, Please create a config file. Check the readme for help!');
-        process.exit();
+        throw new Error('Missing config file cannot proceed, Please create a config file. Check the readme for help!');
     }
     if(!config.version || !config.code) {
-        console.log('Missing version id and share code. These are required for now');
-        process.exit();
+        throw new Error('Missing version id and share code. These are required for now');
     }
     var needed = ["channel","password","username"];
     needed.forEach(function(value){
         if(!config.beam[value]) {
-            console.error("Missing "+value+ " in your config file. Please add it to the file. Check the readme if you are unsure!");
-            process.exit();
+            throw new Error("Missing "+value+ " in your config file. Please add it to the file. Check the readme if you are unsure!");
         }
     });
 }
@@ -542,8 +564,7 @@ function setup() {
                 go(result);
             }
         }, function(e) {
-            console.log('Invalid channel specified in config file, or no channel found on beam');
-            process.exit();
+            throw new Error('Invalid channel specified in config file, or no channel found on beam');
         })
     }
 }
@@ -556,7 +577,11 @@ function go(id) {
     .then(function(){
         return goInteractive(config.version, config.code);
     }).then(function() {
-        return buildControlMap(channelID);
+        return getControls(channelID);
+    }).then(function(controls) {
+        return validateControls(controls);
+    }).then(function(controls) {
+        return buildControlMap(controls);
     }).then(function () {
         return beam.game.join(id);
     }).then(function (details) {
@@ -567,21 +592,21 @@ function go(id) {
         robot = new Tetris.Robot(details);
         robot.handshake(function(err){
             if(err) {
-                console.log('Theres a problem connecting to tetris, show this to a codey person');
+                console.log('Theres a problem connecting to tetris');
                 console.log(err);
             } else {
                 console.log('Connected to Tetris');
-                clear();
+                //clear();
             }
         });
         robot.on('report',handleReport);
-    }).catch(function(err){
+    }).catch(function(err) {
+        widgets = function() {};
         if(err.message !== undefined && err.message.body !== undefined) {
-            err = err.message.body;
+           console.log(err);
         } else {
             throw err;
         }
-        console.log(err);
     });
 }
 

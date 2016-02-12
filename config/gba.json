@@ -5,6 +5,16 @@
     "handler": "robotjs",
     "remap":false,
     "remapTable": {
-        "J":"SPACE"
+    },
+    "blocks": {
+        "start":"select",
+        "select":"start",
+        "W":"S",
+        "S":"W",
+        "A":"D",
+        "D":"A",
+        "L":"R",
+        "R":"L"
     }
+    "widgets":false
 }
