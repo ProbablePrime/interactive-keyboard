@@ -1,457 +1,81 @@
 var Beam = require('beam-client-node');
 var Tetris = require('beam-interactive-node');
 
+var State = require('./lib/state/State');
+var ControlsProcessor = require('./lib/ControlsProcessor');
+var Config = require('./lib/Config');
+var Packets = require('beam-interactive-node/dist/robot/packets');
+
+var config;
+var processor;
+var state;
+
 var clear = require('clear');
 
 //Transforms codes(65) into key names(A) and visa versa
 var keycode = require('keycode');
-var equal = require('deep-equal');
 
 var args = process.argv.slice(2);
-
-var configFile;
-configFile = args[0];
-
-if(configFile) {
-    configFile = configFile.replace('\\','/');
-} else {
-    console.warn('using default config file');
-    configFile = './config/default.json';
-}
-var config;
-try {
-    //Load the config values in from the json
-    config = require(configFile);
-} catch(e) {
-    if(e.code === 'MODULE_NOT_FOUND') {
-        throw new Error('Cannot find '+ configFile);
-    } else {
-        throw new Error('Your config file is incorrectly formatted, please check it at jsonlint.com');
-    }
-}
-var authConfig;
-try {
-    authConfig = require('./config/auth.json');
-    if(authConfig) {
-        if(!config.beam) {
-            config.beam = {};
-        }
-        config.beam.username = authConfig.username;
-        config.beam.password = authConfig.password;
-        config.beam.channel = authConfig.channel;
-    }
-} catch(e) {
-
-}
+var file = args[0];
+var config = new Config(file);
+//50% of users must be voting on an action for it to happe
 var widgets;
-if(config.widgets === undefined || config.widgets) {
+
+if(config.widgets) {
     widgets = require('./lib/widgets');
 } else {
     widgets = function() {};
 }
+processor = new ControlsProcessor(config);
 
-//Remapping is now optional
-if(!config.remap) {
-    config.remap = false;
-}
 
-//We now support multiple keyboard handlers. They can be defined in the config
-//We'll default to the better one
-if(!config.handler) {
-    config.handler = 'robotjs';
-}
 
-var controls = require('./lib/handlers/'+config.handler+'.js');
-
-var Packets = require('beam-interactive-node/dist/robot/packets');
-
-var username = config.beam.username
-var password = config.beam.password;
-
-//50% of users must be voting on an action for it to happen
-var tactileThreshold = config.threshold || 0.5;
-
+//var controls = require('./lib/handlers/'+config.handler+'.js');
 var beam = new Beam();
-
 var robot = null;
-
-var channelID = 0;
-var blocks = [];
-if(config.blocks) {
-    blocks = config.blocks;
-}
-
-var state = {
-    tactiles:{},
-    qgram:[],
-    status:''
-};
-
-/* My onscreen controls are likely to be controls a player(streamer) might use if they don't have a gamepad.
-   So we remap keys from the report to lesser used keys here. Ideally id like to emulate a HID and pass beam events through that.
-   That way the streamer can type in chat without 123129301293120392 appearing. However the interface allows you to toggle interactive mode
-   and the streamer has a microphone too!
-
-   This is defineable in in the config
-   Example:
-   "remapTable": {
-        "W":"1",
-        "S":"2",
-        "A":"3",
-        "D":"4",
-        "J":"5",
-        "K":"6",
-        "L":"7",
-        "I":"8"
-    }
-*/
-if(!config.remapTable) {
-    config.remapTable = [];
-}
-var remap = config.remapTable;
-
-function remapKey(code) {
-    var stringCode;
-    if(typeof code === 'number') {
-        stringCode = keycode(code).toUpperCase();
-    } else {
-        stringCode = code;
-    }
-
-     if(remap[stringCode]) {
-        return remap[stringCode].toLowerCase();
-    }
-    return code;
-}
 
 /**
  * Our report handler, entry point for data from beam
- * @param  {Object} report 
+ * @param  {Object} report Follows the format specified in the latest tetris.proto file
  */
 function handleReport(report) {
-    //Always try and keep the qgram up to date, but don't spam update it
-    //Check if the stored qgram = the new qgram.
-    if(!equal(report.users.qgram, state.qgram)) {
-        widgets(state);
-        state.qgram = report.users.qgram;
+    state.update(report);
+    var progress = processor.process(state);
+    if(robot !== null) {
+        if(progress.tactile.length !== 0 || progress.joystick.length !== 0) {
+            robot.send(new Packets.ProgressUpdate(progress));
+        }
     }
-
-    //if no users are playing or there's a brief absence of activity
-    //the reports contain no data in the tactile/joystick array. So we detect if there's data
-    //before attempting to process it
-    if(report.tactile.length && report.users.quorum > 0) {
-        handleTactile(report.tactile,report.users);
-    } else {
+    if(!report.tactile.length && report.users.quorum == 0) {
         //I don't like this, need to refactor this if it fixes stuck keys
         var touchedAKey = false;
         Object.keys(state.tactiles)
         .forEach(function(key){
             var tactile = state.tactiles[key];
             if(tactile.action) {
-                tactile.action = false;
-                tactile.percentHolding = 0;
-                tactile.percentReleasing = 1;
-                tactile.percentPushing = 0;
-                touchedAKey = true;
+                tactile.clear();
                 setKey(tactile.name,false);
             }
         });
-        if(touchedAKey) {
-            widgets(state);
-        }
     }
 }
 
-function clearKeys() {
-    setKeys(Object.keys(map), false, config.remap);
-}
 //clear the keys on exit?? Ctrl+C doesn't appear to send this event
 process.on('exit', function() {
     console.log('clearing your keys');
-    clearKeys();
+    //clearKeys();
 });
 process.on('SIGINT', function() {
     console.log('clearing your keys');
-    clearKeys();
+    //clearKeys();
     process.exit();
 });
-
-function nullToZero(value) {
-    if(value === null) {
-        return 0;
-    }
-    return value;
-}
-
-function percentage(value,total) {
-    if(total <= 0 || value <= 0) {
-        return 0;
-    }
-    return Math.abs(value / total);
-}
-
-function updateState(keyObj,quorum) {
-    keyObj.holding = nullToZero(keyObj.holding);
-    keyObj.pressFrequency = nullToZero(keyObj.pressFrequency);
-    keyObj.releaseFrequency = nullToZero(keyObj.releaseFrequency);
-
-    var ret = getStateForKey(keyObj.name);
-
-    //We don't use these right now in our decision but good for people who want
-    //to hack
-    ret.pressFrequency = keyObj.pressFrequency;
-    ret.releaseFrequency = keyObj.releaseFrequency;
-    ret.holding = keyObj.holding;
-
-    //Most of this block guards against dividing by 0 and negative percentages
-    //which make the progress bar go backwards
-    ret.percentHolding = percentage(keyObj.holding, quorum);
-    ret.percentPushing = percentage(keyObj.pressFrequency, quorum);
-    ret.percentReleasing = percentage(keyObj.releaseFrequency, quorum);
-
-    return ret;
-}
-function doBlock(keyState,decision,a,b) {
-    a = a.toLowerCase();
-    b = b.toLowerCase();
-    if(keyState.label.toLowerCase() === a) {
-        var startState = getStateForLabel(b);
-        if(startState && startState.action) {
-            decision.action = false;
-            decision.progress = 0;
-        }
-    }
-    return decision;
-}
-
-function doBlocks(keyState,decision) {
-    Object.keys(blocks).forEach(function(blockA){
-        decision = doBlock(keyState, decision, blockA, blocks[blockA])
-    });
-    return decision;
-}
-
-/**
- * Given a report, workout what should happen to the key.
- * @param  {Object} keyObj Directly from the report.tactile array
- * @return {Boolean} true to push AND HOLD the button, false to let go. null to do nothing.
- */
-function tactileDecisionMaker(keyState, quorum) {
-    var decision = {
-        action: false,
-        progress:0
-    };
-
-    decision.progress = Math.min(keyState.percentHolding,1);
-
-    if(keyState.percentHolding >= tactileThreshold) {
-        decision.action = true;
-    }
-    //TODO: This kind of prevents holds, I want to do it correctly
-    // if (quorum === 0) {
-    //     decision.action = false;
-    // }
-
-    if(keyState.percentReleasing >= tactileThreshold) {
-        decision.action = false;
-    }
-    decision = doBlocks(keyState,decision);
-
-    return decision;
-}
-
-function createProgressForKey(keyObj,result) {
-    if (keyObj === undefined || !keyObj.id === undefined) {
-        console.log('Cannot create progress event for invalid key');
-        return;
-    }
-    if(typeof keyObj.id === "string") {
-        keyObj.id = parseInt(keyObj.id, 10);
-    }
-    return new Packets.ProgressUpdate.TactileUpdate({
-        id: keyObj.id,
-        cooldown:0,
-        fired: result.action,
-        progress: result.progress
-    });
-}
-
-function createState(keyName, text, id) {
-    return state.tactiles[keyName] = {
-        action: false,
-        id:id,
-        code:keycode(keyName),
-        name:keyName,
-        label:text || '',
-        percentHolding:0,
-        percentPushing:0,
-        percentReleasing:0
-    }
-}
-
-
-function getStateForKey(keyName) {
-    if(state.tactiles[keyName]){
-        return state.tactiles[keyName];
-    }
-    return createState(keyName);
-}
-
-function getStateForLabel(label) {
-    label = label.toLowerCase();
-    var target;
-    Object.keys(state.tactiles).forEach(function(key){
-        var tactile = state.tactiles[key];
-        if(tactile.label.toLowerCase() === label) {
-            target = tactile;
-        }
-    });
-    return target;
-}
-/**
- * Workout for each key if it should be pushed or unpushed according to the report.
- * @param {[type]} keyObj [description]
- */
 
 function shouldDisplay(keyObj) {
     if(keyObj.pressFrequency !== null || keyObj.releaseFrequency !== null) {
         return keyObj.pressFrequency !== 0 || keyObj.releaseFrequency !== 0;
     }
     return false;
-}
-
-
-function updateStates(users,keyObj) {
-    // if(keyObj.id === 0 && shouldDisplay(keyObj)) {
-    //     console.log(keyObj);
-    // }
-    //Pull the code from our map of ids -> codes
-    keyObj.code = getKeyCodeForID(keyObj.id);
-
-    //get rid of incorrectly created keys
-    if(!keyObj.code) {
-        console.warn('No keycode for ' + keyObj.id);
-        return;
-    }
-
-    keyObj.original = keyObj.code;
-    keyObj.name= keycode(keyObj.original);
-
-    //Remappa if enabled
-    if(config.remap) {
-        keyObj.code = remapKey(keyObj.code);
-    }
-    return updateState(keyObj,users.quorum);
-}
-
-function updateKey(users,keyState) {
-    var decision = tactileDecisionMaker(keyState, users.active);
-    if(decision !== null && decision.action !== null) {
-        if(keyState.action !== decision.action) {
-            setKey(keyState.name, decision.action);
-            keyState.action = decision.action;
-            if(widgets) {
-                widgets(state);
-            }
-            return createProgressForKey(keyState, decision);
-        }
-        var ret;
-        if(decision.progress !== keyState.progress || keyState.action !== decision.action) {
-            ret = createProgressForKey(keyState, decision);
-        }
-        keyState.progress = decision.progress;
-        return ret;
-    }
-}
-
-function handleTactile(tactiles, users) {
-    if(!tactiles) {
-        return;
-    }
-    //We update the states
-    var states = tactiles.map(updateStates.bind(this,users));
-    //Then we workout each key, this allows us to factor in state when deciding
-    //which key to push
-    var progress = states.map(updateKey.bind(this,users));
-    //Remove undefineds from map
-    progress = progress.filter(function(progress){
-        return progress !== undefined;
-    });
-
-    //Don't send progress updates we don't need
-    if(!progress.length) {
-        return;
-    }
-
-    if(robot !== null) {
-        var args = {
-            joystick:[],
-            tactile: progress
-        };
-        robot.send(new Packets.ProgressUpdate(args));
-    }
-}
-
-/**
- * Convinience function that loops through an array of keys and sets them to status
- * @param {String[]|Number[]} keys   Keys to modify
- * @param {Boolean} status status true to push AND HOLD the button, false to let go. null to do nothing.
- * @param {Boolean} remap  True to also run the keys through the remapping routine.
- * @todo This is a mess and is only used in one place, setKeys should go back
- * to its roots and just set each key in the input array to false. 
- * Right now it only takes IDs
- */
-function setKeys(keyIds, status, remap) {
-    var progressArray = [];
-    keyIds.forEach(function(value) {
-        progressArray.push(createProgressForKey({id:value}, {action:status, progress:(status) ? 1 : 0}));
-    });
-    if(robot !== null) {
-        var args = {
-            joystick:[],
-            tactile: progressArray
-        };
-        robot.send(new Packets.ProgressUpdate(args));
-    }
-
-    keyNames = keyIds.map(function(keyName){
-        return keycode(getKeyCodeForID(keyName));
-    });
-    if(remap) {
-        keyNames = keyNames.map(remapKey);
-    }
-
-    keyNames.forEach(function(keyName) {
-        var keyState = getStateForKey(keyName);
-        keyState.action = false;
-        keyState.progress = 0;
-        setKey(keyName,status);
-    });
-    widgets(state);
-}
-/**
- * Given a key name set it to the apropriate status
- * @param {String} keyName The key name, "W" and not 87
- * @param {Boolean} status  true to push the key, false to release
- */
-function setKey(keyName,status) {
-    //Beam reports back keycodes, convert them to keynames, which our handlers accept
-    if(typeof keyName === 'number') {
-        console.log('warning setting by number');
-        keyName = keycode(keyName);
-    }
-
-    //Something in remapping or handling sometimes makes this undefined
-    //It causes an error to proceed so we'll stop here
-    if(!keyName) {
-        return;
-    }
-
-    if(status) {
-        controls.press(keyName.toUpperCase());
-    } else {
-        controls.release(keyName.toUpperCase());
-    }
 }
 
 function getChannelID(channelName) {
@@ -468,22 +92,6 @@ function goInteractive(versionCode,shareCode) {
         tetrisGameId: versionCode,
         tetrisShareCode: shareCode
      },json:true});
-}
-
-var map = {};
-function getKeyCodeForID(id) {
-    return map[id];
-}
-function getIDForKeyCode(keyCode) {
-    return Object.keys(map).find(function(id){
-        return map[id] === keyCode;
-    })
-}
-
-function status(msg) {
-    var now = new Date().toLocaleString();
-    state.status = now + ' ' + msg;
-    widgets(state);
 }
 
 function validateControls(controls) {
@@ -515,19 +123,8 @@ function getControls(channelID) {
     });
 }
 
-/**
- * The new controls editor/controls protocol doesn't send down the keycode.
- * Pull the controls grid that players see from beam, build a map of, button id -> keycode
- * @param  {Number} channelID
- */
-function buildControlMap(controls) {
-    controls.tactiles.forEach(function(tactile) {
-        if(tactile.key) {
-            map[tactile.id] = tactile.key;
-            createState(keycode(tactile.key),tactile.text,tactile.id);
-        }
-    });
-    return map;
+function createState(controls) {
+    return new State(controls);
 }
 
 function validateConfig() {
@@ -538,6 +135,7 @@ function validateConfig() {
         throw new Error('Missing version id and share code. These are required for now');
     }
     var needed = ["channel","password","username"];
+    console.log(config.beam);
     needed.forEach(function(value){
         if(!config.beam[value]) {
             throw new Error("Missing "+value+ " in your config file. Please add it to the file. Check the readme if you are unsure!");
@@ -547,7 +145,6 @@ function validateConfig() {
 
 function setup() {
     validateConfig();
-
     try {
         var streamID = parseInt(config.beam.channel,10);
         if(!steamID.isNAN()) {
@@ -571,8 +168,8 @@ function setup() {
 
 function go(id) {
     beam.use('password', {
-        username: username,
-        password: password
+        username: config.beam.username,
+        password: config.beam.password
     }).attempt()
     .then(function(){
         return goInteractive(config.version, config.code);
@@ -581,7 +178,8 @@ function go(id) {
     }).then(function(controls) {
         return validateControls(controls);
     }).then(function(controls) {
-        return buildControlMap(controls);
+        state = createState(controls);
+        return state;
     }).then(function () {
         return beam.game.join(id);
     }).then(function (details) {
