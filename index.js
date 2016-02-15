@@ -6,7 +6,6 @@ var ControlsProcessor = require('./lib/ControlsProcessor');
 var Config = require('./lib/Config');
 var Packets = require('beam-interactive-node/dist/robot/packets');
 
-var config;
 var processor;
 var state;
 
