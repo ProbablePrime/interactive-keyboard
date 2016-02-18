@@ -134,7 +134,6 @@ function validateConfig() {
         throw new Error('Missing version id and share code. These are required for now');
     }
     var needed = ["channel","password","username"];
-    console.log(config.beam);
     needed.forEach(function(value){
         if(!config.beam[value]) {
             throw new Error("Missing "+value+ " in your config file. Please add it to the file. Check the readme if you are unsure!");
