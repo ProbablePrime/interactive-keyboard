@@ -36,7 +36,7 @@ E.G. `<username>` would become `ProbablePrime` in my case.
     "beam": {
 	//Your Beam username
         "username": "<username>",
-        //Your Beam Passwordsec
+        //Your Beam Password
         "password": "<password>",
         //Your Beam channel
         "channel": "<channel name>"
@@ -54,7 +54,8 @@ E.G. `<username>` would become `ProbablePrime` in my case.
     //Should we remap the keys recieved from beam into other keys, default value is false
     "remap":true,
     //What should the key remaps be, in this example, if your beam controls use W this will actually push 1
-    //This is optional remove this block if you don't need it
+    //This is optional remove this block if you don't need it. Both sides of this remap table should refer to the keys
+    //In their string form. W not 87, 1 not 49. 
     "remapTable": {
         "W":"1",
         "S":"2",
