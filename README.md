@@ -1,5 +1,5 @@
 
-![logo](https://raw.githubusercontent.com/rfox90/beam-segacollection/master/img/logo.png)
+![logo](https://raw.githubusercontent.com/pr/beam-segacollection/master/img/logo.png)
 
 # Beam Plays a Keyboard
 
@@ -11,15 +11,15 @@ Video Coming Soon!
 1. Pick a keyboard controlled game. Any game that allows configureable controls will work yes *ANY*.
 2. Make a Controls layout for that game in the Beam Controls Editor
 3. Get yourself [Nodejs](http://Nodejs.org) version 4.x and above is **required** check with `node -v`
-4. Download this project as a zip file
+4. Download this project as a zip file from the **releases tab*** download JUST the latest release
 5. Unzip it.
 6. Open a terminal/cmd in its folder
-7. Enter npm install. This will install project dependancies
+7. Enter `npm install`. This will install project dependancies
 8. Choose a keyboard handler see the [Handlers](README.md#handlers) section, I reccomend robotjs. There are other easier to install handlers described in the Handlers section below.
 9. Install your handler with `npm install robotjs`
 10. Write a config file in config/ called <YOUR GAME>.json example `config/pokemon.json` follow the sample one for a guide. A video is coming soon.
 11. Start your chosen game, Open a cmd/terminal in the folder you downloaded.
-12. Enter `node index.js config/<YOUR GAME>.json` in the terminal from step 11.
+12. Enter `node index.js ./config/<YOUR GAME>.json` in the terminal from step 11.
 13. If you see "Connected to beam" you should be good to go.
 14. Test out your controls.
 
