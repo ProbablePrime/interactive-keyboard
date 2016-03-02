@@ -1,5 +1,5 @@
 
-![logo](https://raw.githubusercontent.com/pr/beam-segacollection/master/img/logo.png)
+![logo](img/logo.png)
 
 # Beam Plays a Keyboard
 
