@@ -13,6 +13,7 @@ You **MUST**:
 * Have a base level of understanding in how npm and node work.
 * Have a base level of understanding JSON files and how they should be structured
 * Have a beam account
+* Understand that this might not work for your game
 
 You **SHOULD**:
 * Be Patient
@@ -155,6 +156,8 @@ Are you focused on/in your game. You must have your mouse inside the game for th
 Try `kbm-robot` as your handler some require this to interface with DirectInput/XInput.
 
 Try from another device. As this pushes your physical keys, its often impossible to test on the same machine as an infinite loop of key presses occurs. Summon a friend into your channel to help test :).
+
+Try The key without a spark cost or cooldown.
 
 Contact me
 
