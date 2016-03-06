@@ -79,6 +79,7 @@ If your game is private or not published. You can use the version id and share c
 ![share](https://raw.githubusercontent.com/ProbablePrime/beam-keyboard/master/img/share.png)
 
 Select the second radio button in the popup. Your version id is a number displayed at the **top of the popup**. The share code is in the text box in the middle of the popup:
+
 ![share_code](https://raw.githubusercontent.com/ProbablePrime/beam-keyboard/master/img/share_code.png)
 
 Place these in your config file ensuring that the file is still valid json:
