@@ -30,7 +30,7 @@ Video Coming Soon!
 E.G. `<username>` would become `ProbablePrime` in my case.
 
 1. Pick a keyboard controlled game. Any game that allows configureable controls will work yes *ANY*.
-2. Make a Controls layout for that game in the Beam Controls Editor
+2. Make a Controls layout for that game in the Beam Controls Editor ensuring that both holding and frequency are checked for each key and that each key has a valid keycode check [keycode.info](http://keycode.info/) for keycodes.
 3. Get yourself [Nodejs](http://Nodejs.org) version 4.x and above is **required** check with `node -v`
 4. Download this project as a zip file from the **releases tab*** download JUST the latest release
 5. Unzip it.
@@ -159,10 +159,9 @@ Try from another device. As this pushes your physical keys, its often impossible
 
 Try The key without a spark cost or cooldown.
 
+Set your threshold to `0.1` in the config file
+
 Contact me
-
-
-
 
 
 #Example Game Setups
