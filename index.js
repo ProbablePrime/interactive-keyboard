@@ -4,7 +4,7 @@ var Tetris = require('beam-interactive-node');
 var State = require('./lib/state/ControlState');
 var ControlsProcessor = require('./lib/ControlsProcessor');
 var Config = require('./lib/Config');
-var Packets = require('beam-interactive-node/dist/robot/packets');
+var Packets = require('beam-interactive-node/dist/robot/packets').default;
 
 var enhanceState = require('./lib/state/enhancer');
 
