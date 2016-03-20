@@ -27,3 +27,4 @@ build/Release
 node_modules
 
 /config/default.json
+/config/auth.json
