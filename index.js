@@ -195,6 +195,7 @@ function go(id) {
 			}
 		});
 		robot.on('report', handleReport);
+		robot.on('error', (code) => console.log(code));
 	}).catch(function (err) {
 		if (err.message !== undefined && err.message.body !== undefined) {
 			console.log(err);
