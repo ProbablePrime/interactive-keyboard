@@ -4,7 +4,7 @@ var Tetris = require('beam-interactive-node');
 var State = require('./lib/state/ControlState');
 var ControlsProcessor = require('./lib/ControlsProcessor');
 var Config = require('./lib/Config');
-var Packets = require('beam-interactive-node/dist/robot/packets').default;
+var Packets = require('beam-interactive-node/dist/robot/packets');
 
 var enhanceState = require('./lib/state/enhancer');
 
@@ -156,8 +156,6 @@ function setup() {
 			if (result) {
 				go(result);
 			}
-		}, function (e) {
-			throw new Error('Invalid channel specified in config file, or no channel found on beam');
 		});
 	}
 }
