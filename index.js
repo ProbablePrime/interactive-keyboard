@@ -30,9 +30,6 @@ processor.on('changed', (report) => {
 	widgets(report);
 });
 
-var beam = new Beam();
-var robot = null;
-
 /**
  * Our report handler, entry point for data from beam
  * @param  {Object} report Follows the format specified in the latest tetris.proto file
@@ -102,7 +99,7 @@ function validateControls(controls) {
 		//throw new Error("Buttons require holding and frequency to be checked for analysis");
 	}
 
-	var keyCodes = controls.tactiles.every(function(tactile){
+	var keyCodes = controls.tactiles.every((tactile) => {
 		return (tactile.key >= 8 && tactile.key < 300);
 	});
 	if (!keyCodes) {
@@ -183,7 +180,7 @@ function go(id) {
 		details.remote = details.address;
 		details.channel = id;
 		robot = new Tetris.Robot(details);
-		robot.handshake(function (err) {
+		var onConnect = (err) => {
 			if (err) {
 				console.log('Theres a problem connecting to tetris');
 				console.log(err);
@@ -191,9 +188,11 @@ function go(id) {
 				console.log('Connected to Tetris');
 				clear();
 			}
-		});
+		}
+		robot.handshake(onConnect);
 		robot.on('report', handleReport);
 		robot.on('error', (code) => console.log(code));
+		reconnector(robot, 'handshake', onConnect);
 	}).catch(function (err) {
 		if (err.message !== undefined && err.message.body !== undefined) {
 			console.log(err);
