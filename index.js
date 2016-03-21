@@ -1,23 +1,23 @@
-var Beam = require('beam-client-node');
-var Tetris = require('beam-interactive-node');
+const Beam = require('beam-client-node');
+const Tetris = require('beam-interactive-node');
+const clear = require('clear');
+const Packets = require('beam-interactive-node/dist/robot/packets').default;
 
-var State = require('./lib/state/ControlState');
-var ControlsProcessor = require('./lib/ControlsProcessor');
-var Config = require('./lib/Config');
-var Packets = require('beam-interactive-node/dist/robot/packets');
+const State = require('./lib/state/ControlState');
+const ControlsProcessor = require('./lib/ControlsProcessor');
+const Config = require('./lib/Config');
+const enhanceState = require('./lib/state/enhancer');
+const reconnector = require('./lib/reconnector');
 
-var enhanceState = require('./lib/state/enhancer');
+const args = process.argv.slice(2);
+const file = args[0];
+const config = new Config(file);
 
 var processor;
 var state;
-
-var clear = require('clear');
-
-var args = process.argv.slice(2);
-var file = args[0];
-var config = new Config(file);
-// 50% of users must be voting on an action for it to happe
 var widgets;
+const beam = new Beam();
+var robot = null;
 
 if (config.widgets !== undefined && config.widgets) {
 	widgets = require('./lib/widgets');
