@@ -149,6 +149,31 @@ function setup() {
 	}
 }
 
+function onInteractiveConnect(err) {
+	if (err) {
+		console.log('Theres a problem connecting to tetris');
+		console.log(err);
+	} else {
+		console.log('Connected to Tetris');
+		clear();
+	}
+}
+
+function launchInteractive(beam, id) {
+	return beam.game.join(id).then(details => {
+		console.log('Authenticated, Spinning up Tetris Connection');
+		const tetrisDetails = {};
+		tetrisDetails.remote = details.body.address;
+		tetrisDetails.key = details.body.key;
+		tetrisDetails.channel = id;
+		robot = new Tetris.Robot(tetrisDetails);
+		robot.handshake(onInteractiveConnect);
+		robot.on('report', handleReport);
+		robot.on('error', code => console.log(code));
+		reconnector(robot, launchInteractive.bind(this, beam, id), onInteractiveConnect);
+	});
+}
+
 function go(id) {
 	beam.use('password', {
 		username: config.beam.username,
@@ -163,28 +188,8 @@ function go(id) {
 	}).then(controls => {
 		state = createState(controls);
 		return state;
-	}).then(() => {
-		return beam.game.join(id);
-	}).then(details => {
-		console.log('Authenticated, Spinning up Tetris Connection');
-		details = details.body;
-		details.remote = details.address;
-		details.channel = id;
-		robot = new Tetris.Robot(details);
-		const onConnect = err => {
-			if (err) {
-				console.log('Theres a problem connecting to tetris');
-				console.log(err);
-			} else {
-				console.log('Connected to Tetris');
-				clear();
-			}
-		};
-		robot.handshake(onConnect);
-		robot.on('report', handleReport);
-		robot.on('error', code => console.log(code));
-		reconnector(robot, 'handshake', onConnect);
-	}).catch(err => {
+	}).then(launchInteractive.bind(this, beam, id))
+	.catch(err => {
 		if (err.message !== undefined && err.message.body !== undefined) {
 			console.log(err);
 		} else {
