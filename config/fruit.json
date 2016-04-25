@@ -1,0 +1,10 @@
+{
+    "version":1739,
+    "code":"xoq6d57u",
+    "threshold":0.1,
+    "handler": "robotjs",
+    "consensus": "democracy",
+		"mouseEnabled":true,
+		"mouseSource":"screen"
+
+}

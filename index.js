@@ -1,7 +1,6 @@
 'use strict';
 const Beam = require('beam-client-node');
 const Tetris = require('beam-interactive-node');
-const clear = require('clear');
 const Packets = require('beam-interactive-node/dist/robot/packets').default;
 
 const State = require('./lib/state/ControlState');
@@ -157,7 +156,6 @@ function onInteractiveConnect(err) {
 		console.log(err);
 	} else {
 		console.log('Connected to Tetris');
-		clear();
 	}
 }
 
