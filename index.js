@@ -54,11 +54,13 @@ function handleReport(report) {
 }
 
 // clear the keys on exit?? Ctrl+C doesn't appear to send this event
-process.on('exit', () => {
+process.on('exit', code => {
+	console.log(`exiting due to ${code}`);
 	console.log('clearing your keys');
 	processor.clearKeys(state);
 });
 process.on('SIGINT', () => {
+	console.log('SIGINT');
 	console.log('clearing your keys');
 	processor.clearKeys(state);
 	process.exit();
