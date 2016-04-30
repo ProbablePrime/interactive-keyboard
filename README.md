@@ -19,7 +19,7 @@ You **SHOULD**:
 * Be Patient
 * Ask Questions
 
-I am available via [twitter](https://twitter.com/ProbablePrime) and [Discord](https://discord.gg/0ZMfPTBsKVVHWeIB) for help. 
+I am available via [twitter](https://twitter.com/ProbablePrime) and [Discord](https://discord.gg/0ZMfPTBsKVVHWeIB) for help.
 
 
 ## Setup
@@ -36,7 +36,7 @@ E.G. `<username>` would become `ProbablePrime` in my case.
 5. Unzip it.
 6. Open a terminal/cmd in its folder
 7. Enter `npm install`. This will install project dependancies
-8. Choose a keyboard handler see the [Handlers](README.md#handlers) section, I reccomend `keyboardz`. Depending on your requirements you may need to use an alternative handler. Please read the section if you are unsure
+8. Choose a keyboard handler see the [Handlers](README.md#handlers) section, I reccomend `robot-js`. Depending on your requirements you may need to use an alternative handler. Please read the section if you are unsure
 9. Install your **Selected** handler with `npm install <handler>`
 10. Write a config file in config/ called <YOUR GAME>.json example `config/pokemon.json` follow the sample one below for a guide. A video is coming soon.
 11. Start your chosen game, Open a cmd/terminal in the folder you downloaded.
@@ -62,7 +62,7 @@ Remove them in your actual config file. Use [config/default.sample.json](config/
     },
     //Which keyboard handler are you using?
     "handler": "<handler>",
-    
+
     //Use these two properties to configure the version id and share code. Finding these
     // is detailed in the Sharing your game section
     "version":<versionid>,
@@ -92,20 +92,22 @@ Place these in your config file ensuring that the file is still valid json:
 
 3 Handlers are provided to do the actual keypressing when keys are recieved from Beam. They are in order of most reccomended to least:
 
-* keyboardz - Easy to install, Windows only
-* robotjs - Hard to install Robust, Linux/Windows/Mac
+* robot-js - A new and easy to install cross platform alternative to robotjs
 * kbm-robot - Easy to install, Flakey/Unpredictable. Supports DirectInput/XInput games
 
-Installing robotjs on windows is very problematic as it requires a valid node-gyp setup. see [this github issues](https://github.com/nodejs/node-gyp/issues/629).
+## Deprecated Handlers
+These handlers are hard to install or kludge's for earlier times in this project
+* keyboardz - Easy to install, Windows only
+* robotjs - Hard to install Robust, Linux/Windows/Mac
 
 To use a handler for your game install it in the same folder as this project with `npm install` so if you chose keyboardz that would be `npm install keyboardz`. Then in your config file change the `"handler":"robotjs",` to `"handler":"keyboardz",`.
 
 ## A Warning about kbm-robot
 
-kbm-robot was the intial handler for this project but keys would become stuck after 30 minutes of play. I've attempted to rectify this with a timer that restarts some kbm-robot internals. Please **DO NOT** use kbm-robot on an un-supervised stream. Unfourtunately kbm-robot is also the only handler capable of emitting `DirectX/XInput` compatible events. If your target game uses them robotjs and keyboardz might not work. 
+kbm-robot was the intial handler for this project but keys would become stuck after 30 minutes of play. I've attempted to rectify this with a timer that restarts some kbm-robot internals. Please **DO NOT** use kbm-robot on an un-supervised stream. Unfourtunately kbm-robot is also the only handler capable of emitting `DirectX/XInput` compatible events. If your target game uses them robotjs and keyboardz might not work.
 
-# Metric / Maths
-With potentially 100s of people pushing the buttons we need some way to decide if a button should be pushed. 
+# Consensus / Metric / Maths
+With potentially 100s of people pushing the buttons we need some way to decide if a button should be pushed.
 
 Beam currently provides in each report:
 * the number of people who've used the controls at various intervals(now, 10s,20s,30s..etc)
@@ -115,14 +117,14 @@ Beam currently provides in each report:
    * the number of button pushes
    * the number of button releases
 
-Based on that we have to make a decision. This code's current decision process is.
+We support multiple Consensus algorithms but for now the default is called "Democracy" it works as follows:
 
 * Calculate a percentage value for holding, releasing, pushing for this report
 * For Each Button:
     * If the percent of people holding the button down this report is greater or equal to the threshold value(defaults to 50%)
     * Push the button.
     * Else Release the button.
-   
+
 If you can think of a better Metric. Please feel free to PR.
 
 # Advanced Configuration
@@ -142,7 +144,7 @@ In older games.
 
 # Troubleshooting
 
-## Errors on startup. 
+## Errors on startup.
 
 Try reading the first line of the error, Some of them will be in plain english and should tell you exactly whats wrong. If you can't understand the error then contact me :).
 
@@ -163,7 +165,6 @@ Try The key without a spark cost or cooldown.
 Set your threshold to `0.1` in the config file
 
 Contact me
-
 
 #Example Game Setups
 * [Sega Collection](docs/SegaCollection.MD)
