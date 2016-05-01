@@ -1,9 +1,10 @@
-
-![logo](img/logo.png)
-
 # Beam Plays a Keyboard
 
-Do you want to make a Beam Interactive Game? Quickely? This is for you.
+[Beam.pro](https://beam.pro) is a live streaming site that lets viewers interract through onscreen controls with the streamer's game. This project binds beam interactive controls to keyboard/mouse events on the system. This allows viewers to control aspects of/the whole game through beam. 
+
+A few 24/7 automated streams make heavy use of this.
+* https://beam.pro/Youplay 
+* https://beam.pro/merlin
 
 ## Requirements
 Before Attempting to install this:
@@ -21,9 +22,7 @@ You **SHOULD**:
 
 I am available via [twitter](https://twitter.com/ProbablePrime) and [Discord](https://discord.gg/0ZMfPTBsKVVHWeIB) for help.
 
-
 ## Setup
-Video Coming Soon!
 
 ### Placeholders
 `<>`'s indicate that you should replace the value and the `<>`'s with an apropriate value suitable to your situtation.
@@ -96,15 +95,11 @@ Place these in your config file ensuring that the file is still valid json:
 * kbm-robot - Easy to install, Flakey/Unpredictable. Supports DirectInput/XInput games
 
 ## Deprecated Handlers
-These handlers are hard to install or kludge's for earlier times in this project
+These handlers are hard to install or have limited features.
 * keyboardz - Easy to install, Windows only
 * robotjs - Hard to install Robust, Linux/Windows/Mac
 
-To use a handler for your game install it in the same folder as this project with `npm install` so if you chose keyboardz that would be `npm install keyboardz`. Then in your config file change the `"handler":"robotjs",` to `"handler":"keyboardz",`.
-
-## A Warning about kbm-robot
-
-kbm-robot was the intial handler for this project but keys would become stuck after 30 minutes of play. I've attempted to rectify this with a timer that restarts some kbm-robot internals. Please **DO NOT** use kbm-robot on an un-supervised stream. Unfourtunately kbm-robot is also the only handler capable of emitting `DirectX/XInput` compatible events. If your target game uses them robotjs and keyboardz might not work.
+To use a handler for your game install it in the same folder as this project with `npm install` so if you chose `kbm-robot` that would be `npm install kbm-robot`. Then in your config file change the `"handler":"robot-js",` to `"handler":"kbm-robot",`.
 
 # Consensus / Metric / Maths
 With potentially 100s of people pushing the buttons we need some way to decide if a button should be pushed.
@@ -150,21 +145,14 @@ Try reading the first line of the error, Some of them will be in plain english a
 
 ## Controls Do not work
 
-Check your keybindings for the game they should match the keys you are pressing. Press the actual keys on your keyboard to check.
-
-Try refreshing the beam page.
-
-Are you focused on/in your game. You must have your mouse inside the game for the keys to register.
-
-Try `kbm-robot` as your handler some require this to interface with DirectInput/XInput.
-
-Try from another device. As this pushes your physical keys, its often impossible to test on the same machine as an infinite loop of key presses occurs. Summon a friend into your channel to help test :).
-
-Try The key without a spark cost or cooldown.
-
-Set your threshold to `0.1` in the config file
-
-Contact me
+* Check your keybindings for the game they should match the keys you are pressing. Press the actual keys on your keyboard to check.
+* Try refreshing the beam page.
+* Are you focused on/in your game. You must have your mouse inside the game for the keys to register.
+* Try `kbm-robot` as your handler some require this to interface with DirectInput/XInput.
+* Try from another device. As this pushes your physical keys, its often impossible to test on the same machine as an infinite loop of key presses occurs. Summon a friend into your channel to help test :).
+* Try The key without a spark cost or cooldown.
+* Set your threshold to `0.1` in the config file
+* Contact me
 
 #Example Game Setups
 * [Sega Collection](docs/SegaCollection.MD)
