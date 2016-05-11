@@ -1,0 +1,11 @@
+{
+    "version":2320,
+    "code":"ecqd28hi",
+    "threshold":0.1,
+    "handler": "robot-js",
+    "windowTarget":"Untitled.*",
+    "widgets":false,
+    "mouseSource":"screen",
+    "mouseEnabled":true,
+    "consensus": "democracy"
+}
