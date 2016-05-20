@@ -20,8 +20,6 @@ You **SHOULD**:
 * Be Patient
 * Ask Questions
 
-I am available via [twitter](https://twitter.com/ProbablePrime) and [Discord](https://discord.gg/0ZMfPTBsKVVHWeIB) for help.
-
 ## Setup
 
 ### Placeholders
@@ -30,7 +28,7 @@ E.G. `<username>` would become `ProbablePrime` in my case.
 
 1. Pick a keyboard controlled game. Any game that allows configureable controls will work yes *ANY*.
 2. Make a Controls layout for that game in the Beam Controls Editor ensuring that both holding and frequency are checked for each key and that each key has a valid keycode check [keycode.info](http://keycode.info/) for keycodes.
-3. Get yourself [Nodejs](http://Nodejs.org) version 5.x and above is **required** check with `node -v`
+3. Get yourself [Nodejs](http://Nodejs.org) version 5.x and above is **required** check with `node -v` **node 6** has not been tested and might not work
 4. Download this project as a zip file from the **releases tab*** download JUST the latest release
 5. Unzip it.
 6. Open a terminal/cmd in its folder
