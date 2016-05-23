@@ -1,4 +1,4 @@
-# Beam Plays a Keyboard
+# Potato
 
 [Beam.pro](https://beam.pro) is a live streaming site that lets viewers interract through onscreen controls with the streamer's game. This project binds beam interactive controls to keyboard/mouse events on the system. This allows viewers to control aspects of/the whole game through beam. 
 
