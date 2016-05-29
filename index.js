@@ -81,6 +81,12 @@ function goInteractive(versionCode, shareCode) {
 	}, json: true});
 }
 
+function checkInteractive() {
+	return beam.request('GET', `channels/${channelID}?fields=interactive`).then(res => {
+		return res.body && res.body.interactive;
+	});
+}
+
 function validateControls(controls) {
 	if (!controls.tactiles || controls.tactiles.length === 0) {
 		throw new Error('No buttons defined, please define some buttons in the beam lab');
@@ -179,7 +185,11 @@ function go(id) {
 		username: config.beam.username,
 		password: config.beam.password
 	}).attempt()
-	.then(() => {
+	.then(checkInteractive)
+	.then(interactive => {
+		if (interactive) {
+			return;
+		}
 		return goInteractive(config.version, config.code);
 	}).then(() => {
 		return getControls(channelID);
