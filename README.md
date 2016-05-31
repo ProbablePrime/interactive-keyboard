@@ -27,13 +27,13 @@ You **SHOULD**:
 E.G. `<username>` would become `ProbablePrime` in my case.
 
 1. Pick a keyboard controlled game. Any game that allows configureable controls will work yes *ANY*.
-2. Make a Controls layout for that game in the Beam Controls Editor ensuring that both holding and frequency are checked for each key and that each key has a valid keycode check [keycode.info](http://keycode.info/) for keycodes.
-3. Get yourself [Nodejs](http://Nodejs.org) version 5.x and above is **required** check with `node -v` **node 6** has not been tested and might not work
+2. Make a Controls layout for that game in the Beam Controls Editor ensuring that both holding and frequency are checked for each key and that each key has something in `Keyboard Trigger`
+3. Get yourself [Nodejs](http://Nodejs.org) version 5.x and above is **required** check with `node -v` **node 6** has not been tested and might not work.
 4. Download this project as a zip file from the **releases tab*** download JUST the latest release
 5. Unzip it.
 6. Open a terminal/cmd in its folder
 7. Enter `npm install`. This will install project dependancies
-8. Choose a keyboard handler see the [Handlers](README.md#handlers) section, I reccomend `robot-js`. Depending on your requirements you may need to use an alternative handler. Please read the section if you are unsure
+8. Choose a keyboard handler see the [Handlers](README.md#handlers) section, I reccomend `robot-js` or `robotjs`. Depending on your requirements you may need to use an alternative handler. Please read the section if you are unsure
 9. Install your **Selected** handler with `npm install <handler>`
 10. Write a config file in config/ called <YOUR GAME>.json example `config/pokemon.json` follow the sample one below for a guide. A video is coming soon.
 11. Start your chosen game, Open a cmd/terminal in the folder you downloaded.
@@ -90,7 +90,7 @@ Place these in your config file ensuring that the file is still valid json:
 3 Handlers are provided to do the actual keypressing when keys are recieved from Beam. They are in order of most reccomended to least:
 
 * robot-js - A new alternative to robotjs
-* robotjs - Robust, Linux/Windows/Mac(Robotjs is now easier to install go play)
+* robotjs - Robust, Linux/Windows/Mac (Robotjs is now easier to install go play, yay!)
 
 ## Deprecated Handlers
 These handlers are hard to install or have limited features.
