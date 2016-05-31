@@ -89,13 +89,14 @@ Place these in your config file ensuring that the file is still valid json:
 
 3 Handlers are provided to do the actual keypressing when keys are recieved from Beam. They are in order of most reccomended to least:
 
-* robot-js - A new and easy to install cross platform alternative to robotjs
-* kbm-robot - Easy to install, Flakey/Unpredictable. Supports DirectInput/XInput games
+* robot-js - A new alternative to robotjs
+* robotjs - Robust, Linux/Windows/Mac(Robotjs is now easier to install go play)
 
 ## Deprecated Handlers
 These handlers are hard to install or have limited features.
 * keyboardz - Easy to install, Windows only
-* robotjs - Hard to install Robust, Linux/Windows/Mac
+* kbm-robot - Easy to install, Flakey/Unpredictable. Supports DirectInput/XInput games
+
 
 To use a handler for your game install it in the same folder as this project with `npm install` so if you chose `kbm-robot` that would be `npm install kbm-robot`. Then in your config file change the `"handler":"robot-js",` to `"handler":"kbm-robot",`.
 
