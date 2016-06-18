@@ -195,8 +195,8 @@ function go(id) {
 	}).attempt()
 	.then(checkInteractive)
 	.then(interactive => {
-		console.log('Channel is already interactive using controls present');
 		if (interactive) {
+			console.log('Channel is already interactive using controls present');
 			return;
 		}
 		return goInteractive(config.version, config.code);
