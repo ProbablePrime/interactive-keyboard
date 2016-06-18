@@ -78,7 +78,14 @@ function goInteractive(versionCode, shareCode) {
 		interactive: true,
 		tetrisGameId: versionCode,
 		tetrisShareCode: shareCode
-	}, json: true});
+	}, json: true}).then(res => {
+		if (res.statusCode !== 200) {
+			if (res.body && res.body.tetrisGameId) {
+				throw new Error(res.body.tetrisGameId);
+			}
+			throw new Error('Couldn\'t set channel to interactive with that game.');
+		}
+	});
 }
 
 function checkInteractive() {
@@ -87,22 +94,17 @@ function checkInteractive() {
 	});
 }
 
-function validateControls(controls) {
-	if (!controls.tactiles || controls.tactiles.length === 0) {
-		throw new Error('No buttons defined, please define some buttons in the beam lab');
-	}
-	const analysis = controls.tactiles.every(tactile => {
-		return (tactile.analysis.holding && tactile.analysis.frequency);
-	});
-	if (!analysis) {
-		// throw new Error("Buttons require holding and frequency to be checked for analysis");
-	}
+function hasControls(type, controls) {
+	return controls[type] && controls[type].length;
+}
 
-	const keyCodes = controls.tactiles.every(tactile => {
-		return (tactile.key >= 8 && tactile.key < 300);
-	});
-	if (!keyCodes) {
-		// throw new Error("Some invalid keycodes were found in your beam controls. Check them at keycode.info");
+function hasSomeControls(controls) {
+	return hasControls('tactiles', controls) || hasControls('joysticks', controls) || hasControls('screens', controls);
+}
+
+function validateControls(controls) {
+	if (!hasSomeControls(controls)) {
+		throw new Error('No controls found');
 	}
 	return controls;
 }
@@ -110,9 +112,15 @@ function validateControls(controls) {
 function getControls(channelID) {
 	return beam.request('GET', `tetris/${channelID}`)
 	.then(res => {
+		if (res.statusCode === 400) {
+			throw new Error('Target channel is not interactive');
+		}
+		if (!res.body.version) {
+			throw new Error('Incorrect version id or share code in your config or no control layout saved for that version.');
+		}
 		return res.body.version.controls;
 	}, () => {
-		throw new Error('Incorrect version id or share code in your config or no control layout saved for that version.');
+		throw new Error('Problem retrieving controls');
 	});
 }
 
