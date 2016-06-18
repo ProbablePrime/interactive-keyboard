@@ -33,9 +33,10 @@ E.G. `<username>` would become `ProbablePrime` in my case.
 5. Unzip it.
 6. Open a terminal/cmd in its folder
 7. Enter `npm install`. This will install project dependancies
+8. In `config/` copy auth.sample.json to auth.json and fill it in with your beam details.
 8. Choose a keyboard handler see the [Handlers](README.md#handlers) section, I reccomend `robot-js` or `robotjs`. Depending on your requirements you may need to use an alternative handler. Please read the section if you are unsure
 9. Install your **Selected** handler with `npm install <handler>`
-10. Write a config file in config/ called <YOUR GAME>.json example `config/pokemon.json` follow the sample one below for a guide. A video is coming soon.
+10. Write a config file in config/ called <YOUR GAME>.json example `config/pokemon.json` follow the sample one below for a guide
 11. Start your chosen game, Open a cmd/terminal in the folder you downloaded.
 12. Enter `node index.js ./config/<YOUR GAME>.json` in the terminal from step 11.
 13. If you see "Connected to beam" you should be good to go.
@@ -49,14 +50,6 @@ Remove them in your actual config file. Use [config/default.sample.json](config/
 
 ```
 {
-    "beam": {
-	//Your Beam username
-        "username": "<username>",
-        //Your Beam Password
-        "password": "<password>",
-        //Your Beam channel
-        "channel": "<channel name>"
-    },
     //Which keyboard handler are you using?
     "handler": "<handler>",
 
