@@ -80,13 +80,13 @@ Place these in your config file ensuring that the file is still valid json:
 
 # Handlers
 
-3 Handlers are provided to do the actual keypressing when keys are recieved from Beam. They are in order of most reccomended to least:
+Handlers are provided to do the actual keypressing when keys are recieved from Beam. We currently support:
 
 * robot-js - A new alternative to robotjs
 * robotjs - Robust, Linux/Windows/Mac (Robotjs is now easier to install go play, yay!)
 
 ## Deprecated Handlers
-These handlers are hard to install or have limited features.
+These handlers have undocumented compatibility issues.
 * keyboardz - Easy to install, Windows only
 * kbm-robot - Easy to install, Flakey/Unpredictable. Supports DirectInput/XInput games
 
