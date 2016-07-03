@@ -10,30 +10,21 @@ A few 24/7 automated streams make heavy use of this.
 Before Attempting to install this:
 
 You **MUST**:
-* Have base knowledge of command line operations in your operating system
-* Have a base level of understanding in how npm and node work.
-* Have a base level of understanding JSON files and how they should be structured
+* Have knowledge of command line operations in your operating system
+* Know NodeJs Well.
+* Understand JSON files and how they should be structured
 * Have a beam account
 * Understand that this might not work for your game
-
-You **SHOULD**:
-* Be Patient
-* Ask Questions
+* Understand that this whole project is in flux. Until it is 1.0.0 stuff will change.
 
 ## Setup
 
-### Placeholders
-`<>`'s indicate that you should replace the value and the `<>`'s with an apropriate value suitable to your situtation.
-E.G. `<username>` would become `ProbablePrime` in my case.
-
-1. Pick a keyboard controlled game. Any game that allows configureable controls will work yes *ANY*.
-2. Make a Controls layout for that game in the Beam Controls Editor ensuring that both holding and frequency are checked for each key and that each key has something in `Keyboard Trigger`
-3. Get yourself [Nodejs](http://Nodejs.org) version 5.x and above is **required** check with `node -v` **node 6** has not been tested and might not work.
-4. Download this project as a zip file from the **releases tab*** download JUST the latest release
-5. Unzip it.
-6. Open a terminal/cmd in its folder
-7. Enter `npm install`. This will install project dependancies
-8. In `config/` copy auth.sample.json to auth.json and fill it in with your beam details.
+1. Make a Controls layout for that game in the Beam Controls Editor ensuring that both holding and frequency are checked for each key and that each key has something in `Keyboard Trigger`
+2. Get yourself [Nodejs](http://Nodejs.org) version 5.x and above.
+3. Clone this project with git
+5. Open a terminal/cmd to its folder
+6. Run `npm install`
+7. In `config/` copy auth.sample.json to auth.json and fill it in with your beam details.
 8. Choose a keyboard handler see the [Handlers](README.md#handlers) section, I reccomend `robot-js` or `robotjs`. Depending on your requirements you may need to use an alternative handler. Please read the section if you are unsure
 9. Install your **Selected** handler with `npm install <handler>`
 10. Write a config file in config/ called <YOUR GAME>.json example `config/pokemon.json` follow the sample one below for a guide
@@ -48,6 +39,10 @@ E.G. `<username>` would become `ProbablePrime` in my case.
 Comments within the file are **Invalid** But are included below here to provide instructions. You can see an example one at
 Remove them in your actual config file. Use [config/default.sample.json](config/default.sample.json) as a base/example. always check the file at [jsonlint.com](jsonlint.com) for validity.
 
+### Placeholders
+`<>`'s indicate that you should replace the value and the `<>`'s with an apropriate value suitable to your situtation.
+E.G. `<username>` would become `ProbablePrime` in my case.
+
 ```
 {
     //Which keyboard handler are you using?
@@ -59,8 +54,6 @@ Remove them in your actual config file. Use [config/default.sample.json](config/
     "code":"<sharecode>"
 }
 ```
-
-Always test your config file on a site like jsonlint.com to check that it is valid. If the json file is invalid jsonlint will tell you why. You can read up on [JSON here](http://json.org/) try tracing your document flow through the chart with your finger if you are stuck. You're on github. Now is a fantastic time to learn JSON. Pretty much everything uses it these days.
 
 # Sharing your game
 
@@ -136,7 +129,6 @@ In older games.
 Try reading the first line of the error, Some of them will be in plain english and should tell you exactly whats wrong. If you can't understand the error then contact me :).
 
 ## Controls Do not work
-
 * Check your keybindings for the game they should match the keys you are pressing. Press the actual keys on your keyboard to check.
 * Try refreshing the beam page.
 * Are you focused on/in your game. You must have your mouse inside the game for the keys to register.
@@ -144,8 +136,3 @@ Try reading the first line of the error, Some of them will be in plain english a
 * Try from another device. As this pushes your physical keys, its often impossible to test on the same machine as an infinite loop of key presses occurs. Summon a friend into your channel to help test :).
 * Try The key without a spark cost or cooldown.
 * Set your threshold to `0.1` in the config file
-* Contact me
-
-#Example Game Setups
-* [Sega Collection](docs/SegaCollection.MD)
-* [Visual Boy Advance](docs/VBA.MD)
