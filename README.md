@@ -2,6 +2,8 @@
 
 [Beam.pro](https://beam.pro) is a live streaming site that lets viewers interract through onscreen controls with the streamer's game. This project binds beam interactive controls to keyboard/mouse events on the system. This allows viewers to control aspects of/the whole game through beam. 
 
+This project is currently a work in progress and in a **Pre-Release** state. I would strongly suggest that **only developers** use it. I'm working on a more user friendly version but from the issue tracker you can see this is a long way off. 
+
 A few 24/7 automated streams make heavy use of this.
 * https://beam.pro/Youplay 
 * https://beam.pro/merlin
