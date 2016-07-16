@@ -1,0 +1,25 @@
+{
+    "version":3138,
+    "code":"40fi0ogq",
+    "threshold":0.1,
+    "handler": "robotjs",
+    "windowTarget":"",
+    "widgets":true,
+    "mouseEnabled":true,
+    "consensus": "democracy",
+    "custom": {
+      "joystick": {
+        "0": "geofix"
+      }
+    },
+    "telnet": {
+      "host": "192.168.0.110",
+      "port": "5554",
+      "shellPrompt":"",
+      "echoLines":0
+    },
+    "start": {
+      "long": 47.656848,
+      "lat": -122.316136
+    }
+}
