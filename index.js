@@ -155,7 +155,7 @@ function setup() {
 		if (!target) {
 			target = config.beam.username;
 		}
-		console.log(`Using ${target}`);
+		console.log(`Using ${target} with Version: ${config.version} && Code: ${config.code}`);
 		getChannelID(target).then(result => {
 			if (result) {
 				go(result);
