@@ -193,12 +193,7 @@ function go(id) {
 		username: config.beam.username,
 		password: config.beam.password
 	}).attempt()
-	.then(checkInteractive)
-	.then(interactive => {
-		if (interactive) {
-			console.log('Channel is already interactive using controls present');
-			return;
-		}
+	.then(() => {
 		return goInteractive(config.version, config.code);
 	}).then(() => {
 		return getControls(channelID);
