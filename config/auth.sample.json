@@ -1,5 +1,5 @@
 {
 	"username":"<username>",
 	"password":"<password>",
-	"channel":"<username>"
+	"token": "<oauth token>"
 }
