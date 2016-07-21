@@ -111,17 +111,14 @@ function validateControls(controls) {
 	return controls;
 }
 
-function getControls(channelID) {
-	return beam.request('GET', `tetris/${channelID}`)
+function getControls(version, code) {
+	return beam.request('GET', `tetris/versions/${version}?code=${code}`)
 	.then(res => {
-		if (res.statusCode === 400) {
-			throw new Error('Target channel is not interactive');
-		}
-		if (!res.body.version) {
+		if (!res.body.controls) {
 			throw new Error('Incorrect version id or share code in your config or no control layout saved for that version.');
 		}
-		return res.body.version.controls;
-	}, () => {
+		return res.body.controls;
+	}).catch(() => {
 		throw new Error('Problem retrieving controls');
 	});
 }
@@ -137,17 +134,11 @@ function validateConfig() {
 	if (!config.version || !config.code) {
 		throw new Error('Missing version id and share code. These are required for now');
 	}
-	const needed = ['channel', 'password', 'username'];
-	needed.forEach(value => {
-		if (!config.beam[value]) {
-			throw new Error(`Missing ${value} in your config file. Please add it to the file. Check the readme if you are unsure!`);
-		}
-	});
 }
 
 function setup() {
 	validateConfig();
-	console.log(`Using ${target} with Version: ${config.version} && Code: ${config.code}`);
+	console.log(`Using ${config.beam.username} with Version: ${config.version} && Code: ${config.code}`);
 	getChannelID(config.beam.username).then(result => {
 		if (result) {
 			go(result);
@@ -180,11 +171,12 @@ function launchInteractive(beam, id) {
 }
 
 function go(id) {
-	auth(config, beam)
+	channelID = id;
+	auth(config.beam, beam)
 	.then(() => {
 		return goInteractive(config.version, config.code);
 	}).then(() => {
-		return getControls(channelID);
+		return getControls(config.version, config.code);
 	}).then(controls => {
 		return validateControls(controls);
 	}).then(controls => {
