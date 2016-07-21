@@ -26,7 +26,7 @@ You **MUST**:
 3. Clone this project with git
 5. Open a terminal/cmd to its folder
 6. Run `npm install`
-7. In `config/` copy auth.sample.json to auth.json and fill it in with your beam details.
+7. In `config/` copy auth.sample.json to auth.json and fill it in with your beam details. I strongly suggest OAuth, use the Implicit flow to generate a `tetris:robot:self` & `channel:update:self` key, they last a year.
 8. Choose a keyboard handler see the [Handlers](README.md#handlers) section, I reccomend `robot-js` or `robotjs`. Depending on your requirements you may need to use an alternative handler. Please read the section if you are unsure
 9. Install your **Selected** handler with `npm install <handler>`
 10. Write a config file in config/ called <YOUR GAME>.json example `config/pokemon.json` follow the sample one below for a guide
