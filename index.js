@@ -3,6 +3,8 @@ const Beam = require('beam-client-node');
 const Tetris = require('beam-interactive-node');
 const Packets = require('beam-interactive-node/dist/robot/packets').default;
 
+const auth = require('./lib/auth.js');
+
 const State = require('./lib/state/ControlState');
 const ControlsProcessor = require('./lib/ControlsProcessor');
 const Config = require('./lib/Config');
@@ -178,10 +180,7 @@ function launchInteractive(beam, id) {
 }
 
 function go(id) {
-	beam.use('password', {
-		username: config.beam.username,
-		password: config.beam.password
-	}).attempt()
+	auth(config, beam)
 	.then(() => {
 		return goInteractive(config.version, config.code);
 	}).then(() => {
