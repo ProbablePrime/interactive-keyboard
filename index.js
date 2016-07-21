@@ -145,23 +145,12 @@ function validateConfig() {
 
 function setup() {
 	validateConfig();
-	try {
-		const streamID = parseInt(config.beam.channel, 10);
-		if (!streamID.isNAN()) {
-			go(streamID);
+	console.log(`Using ${target} with Version: ${config.version} && Code: ${config.code}`);
+	getChannelID(config.beam.username).then(result => {
+		if (result) {
+			go(result);
 		}
-	} catch (e) {
-		let target = config.beam.channel;
-		if (!target) {
-			target = config.beam.username;
-		}
-		console.log(`Using ${target} with Version: ${config.version} && Code: ${config.code}`);
-		getChannelID(target).then(result => {
-			if (result) {
-				go(result);
-			}
-		});
-	}
+	});
 }
 
 function onInteractiveConnect(err) {
