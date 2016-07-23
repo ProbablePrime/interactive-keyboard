@@ -2,6 +2,7 @@
 const Beam = require('beam-client-node');
 const Tetris = require('beam-interactive-node');
 const Packets = require('beam-interactive-node/dist/robot/packets').default;
+const cargo = require('async.cargo');
 
 const auth = require('./lib/auth.js');
 
@@ -31,7 +32,23 @@ const processor = new ControlsProcessor(config);
 processor.on('changed', report => {
 	widgets(report);
 });
-
+const limit = 10;
+const train = cargo((tasks, callback) => {
+	console.log(train.length());
+	if (train.length() > limit) {
+		console.log('DERAILMENT NOISES');
+		train.kill();
+	}
+	tasks.forEach(task => {
+		const progress = processor.process(task.current, task.previous);
+		if (robot !== null && robot.connect.socket.readyState === robot.connect.socket.OPEN) {
+			if (progress.tactile.length !== 0 || progress.joystick.length !== 0) {
+				robot.send(new Packets.ProgressUpdate(progress));
+			}
+		}
+	});
+	callback();
+}, limit);
 /**
  * Our report handler, entry point for data from beam
  * @param  {Object} report Follows the format specified in the latest tetris.proto file
@@ -43,12 +60,8 @@ function handleReport(report) {
 	// Eventually I might make everything here Imuteable but for now just making
 	// each report run in sequence will do
 	const enhancedState = enhanceState(report, state);
-	const progress = processor.process(enhancedState, state);
-	if (robot !== null) {
-		if (progress.tactile.length !== 0 || progress.joystick.length !== 0) {
-			robot.send(new Packets.ProgressUpdate(progress));
-		}
-	}
+
+	train.push({current: enhancedState, previous: state});
 	if (!report.tactile.length && report.users.active === 0) {
 		processor.clearKeys(state.tactiles);
 	}
