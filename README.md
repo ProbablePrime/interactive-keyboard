@@ -9,21 +9,9 @@ A few 24/7 automated streams make heavy use of this.
 * https://beam.pro/merlin
 
 ## Requirements
-Before Attempting to install this:
-
-You **MUST**:
-* Have knowledge of command line operations in your operating system
-* Know Node.js well enough to know your way around npm and how to read error messages.
-* Understand JSON files and how they should be structured.
-* Have a beam account.
-* Understand the basics of Git.
-* Understand that this might not work for your game.
-* Understand that this whole project is in flux. Until it is 1.0.0 stuff will change.
-* Understand that this is a work in progress and is not released. when you see a release in the release tab that will be considered stable. 
+* Node >= 5
 
 ## Setup
-Follow each step in turn and do not skip anything!
-
 1. Choose a keyboard controlled game.
 2. Make a Controls layout for that game in the Beam Controls Editor ensuring that both holding and frequency are checked for each key and that each key has something in `Keyboard Trigger`
 3. Clone this project
@@ -125,10 +113,6 @@ Will prevent people from being able to push both select and start at the same ti
 In older games.
 
 # Troubleshooting
-
-## Errors on startup.
-
-Try reading the first line of the error, Some of them will be in plain english and should tell you exactly whats wrong. If you can't understand the error then contact me :).
 
 ## Controls Do not work
 * Check your keybindings for the game they should match the keys you are pressing. Press the actual keys on your keyboard to check.
