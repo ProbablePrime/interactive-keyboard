@@ -34,9 +34,7 @@ processor.on('changed', report => {
 });
 const limit = 10;
 const train = cargo((tasks, callback) => {
-	console.log(train.length());
 	if (train.length() > limit) {
-		console.log('DERAILMENT NOISES');
 		train.kill();
 	}
 	tasks.forEach(task => {
