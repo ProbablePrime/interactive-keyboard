@@ -112,6 +112,12 @@ For example:
 Will prevent people from being able to push both select and start at the same time. This is helpful as it prevents soft resets.
 In older games.
 
+## Tactile Threshold
+Set the required percentage of users pushing a button for it to be depressed. Defaults to 0.1.
+```
+tactileThreshhold: <Number>
+```
+
 # Troubleshooting
 
 ## Controls Do not work
