@@ -1,7 +1,5 @@
 {
-    "threshold":0.5,
     "handler": "robotjs",
-    "remap":false,
     "version":000,
     "shareCode":"shareCode"
 }
