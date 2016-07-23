@@ -16,6 +16,7 @@ You **MUST**:
 * Know Node.js well enough to know your way around npm and how to read error messages.
 * Understand JSON files and how they should be structured.
 * Have a beam account.
+* Understand the basics of Git.
 * Understand that this might not work for your game.
 * Understand that this whole project is in flux. Until it is 1.0.0 stuff will change.
 * Understand that this is a work in progress and is not released. when you see a release in the release tab that will be considered stable. 
@@ -25,11 +26,10 @@ Follow each step in turn and do not skip anything!
 
 1. Choose a keyboard controlled game.
 2. Make a Controls layout for that game in the Beam Controls Editor ensuring that both holding and frequency are checked for each key and that each key has something in `Keyboard Trigger`
-2. Get yourself [Nodejs](http://Nodejs.org).
-3. **Clone this project with git** do not download a zip. 
-5. Open a terminal/cmd to its folder
-6. Run `npm install`
-7. In `config/` create a file called auth.json. It should contain your username and a password OR an OAuth token.
+3. Clone this project
+5. Open a terminal/cmd to the cloned folder
+6. Run `npm install` to install dependancies
+7. In `config/` create a file called auth.json. It should contain your username and a password OR an OAuth token. To authenticate with Beam.
 Example:
 ```
 {
@@ -49,34 +49,13 @@ If you're using OAuth, the scopes required are `tetris:robot:self` and `channel:
 
 8. Choose a keyboard handler see the [Handlers](README.md#handlers) section, I reccomend `robot-js` or `robotjs`. Depending on your requirements you may need to use an alternative handler. Please read the section if you are unsure.
 9. Install your **Selected** handler with `npm install <handler>`
-10. Create a config file in config/ called <YOUR GAME>.json example `config/pokemon.json` follow the sample one below for a guide
+10. Create a config file in config/ called <YOUR GAME>.json example `config/pokemon.json` Use [config/default.sample.json](config/default.sample.json) as a base/example. 
 11. Start your chosen game
 12. Go back to the terminal that's in the project's folder.
 12. Enter `node index.js ./config/<YOUR GAME>.json` in the terminal replacing yourgame with the config file you created.
 13. If you see "Connected to beam" you should be good to go.
 14. Test out your controls.
 15. If they do not work, see the [troubleshooting section ](README.md#troubleshooting)
-
-## Config File Specifications
-
-Comments within the file are **Invalid** But are included below here to provide instructions. You can see an example one at
-Remove them in your actual config file. Use [config/default.sample.json](config/default.sample.json) as a base/example. always check the file at [jsonlint.com](jsonlint.com) for validity.
-
-### Placeholders
-`<>`'s indicate that you should replace the value and the `<>`'s with an apropriate value suitable to your situtation.
-E.G. `<username>` would become `ProbablePrime` in my case.
-
-```
-{
-    //Which keyboard handler are you using?
-    "handler": "<handler>",
-
-    //Use these two properties to configure the version id and share code. Finding these
-    // is detailed in the Sharing your game section
-    "version":<versionid>,
-    "code":"<sharecode>"
-}
-```
 
 # Sharing your game
 
