@@ -15,6 +15,7 @@
   "dependencies": {
     "beam-client-node": "0.1.0",
     "beam-interactive-node": "^0.2.5",
+    "bluebird": "^3.4.1",
     "cli-color": "^1.1.0",
     "clui": "^0.3.1",
     "deep-equal": "^1.0.1",
