@@ -2,6 +2,7 @@
 const Beam = require('beam-client-node');
 const Tetris = require('beam-interactive-node');
 const Packets = require('beam-interactive-node/dist/robot/packets').default;
+const Promise = require('bluebird');
 const cargo = require('async.cargo');
 
 const auth = require('./lib/auth.js');
@@ -164,18 +165,31 @@ function onInteractiveConnect(err) {
 	}
 }
 
+function performRobotHandshake(robot) {
+	return new Promise((resolve, reject) => {
+		robot.handshake(err => {
+			if (err) {
+				reject(err);
+			}
+			onInteractiveConnect(err);
+			resolve();
+		});
+	});
+}
+
 function launchInteractive(beam, id) {
 	return beam.game.join(id).then(details => {
 		console.log('Authenticated, Spinning up Tetris Connection');
-		const tetrisDetails = {};
-		tetrisDetails.remote = details.body.address;
-		tetrisDetails.key = details.body.key;
-		tetrisDetails.channel = id;
-		robot = new Tetris.Robot(tetrisDetails);
+		robot = new Tetris.Robot({
+			remote: details.body.address,
+			key: details.body.key,
+			channel: id
+		});
 		robot.handshake(onInteractiveConnect);
 		robot.on('report', handleReport);
 		robot.on('error', code => console.log(code));
 		reconnector(robot, launchInteractive.bind(this, beam, id), onInteractiveConnect);
+		return performRobotHandshake(robot);
 	});
 }
 
