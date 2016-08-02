@@ -76,10 +76,7 @@ function goInteractive(versionCode, shareCode) {
 		tetrisGameId: versionCode,
 		tetrisShareCode: shareCode
 	}, json: true}).then(res => {
-		if (res.statusCode !== 200) {
-			if (res.body && res.body.tetrisGameId) {
-				throw new Error(res.body.tetrisGameId);
-			}
+		if (res.statusCode !== 200 || !res.body.interactive) {
 			throw new Error('Couldn\'t set channel to interactive with that game.');
 		}
 	});
@@ -164,13 +161,12 @@ function performRobotHandshake(robot) {
 
 function launchInteractive(beam, id) {
 	return beam.game.join(id).then(details => {
-		console.log('Authenticated, Spinning up Tetris Connection');
+		console.log('Authenticated, Spinning up Interactive Connection');
 		robot = new Tetris.Robot({
 			remote: details.body.address,
 			key: details.body.key,
 			channel: id
 		});
-		robot.handshake(onInteractiveConnect);
 		robot.on('report', handleReport);
 		robot.on('error', code => console.log(code));
 		reconnector(robot, launchInteractive.bind(this, beam, id), onInteractiveConnect);
