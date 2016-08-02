@@ -140,10 +140,10 @@ function setup() {
 
 function onInteractiveConnect(err) {
 	if (err) {
-		console.log('Theres a problem connecting to tetris');
+		console.log('Theres a problem connecting to Interactive');
 		console.log(err);
 	} else {
-		console.log('Connected to Tetris');
+		console.log('Connected to Interactive');
 	}
 }
 
