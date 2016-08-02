@@ -40,9 +40,7 @@ processor.on('changed', report => {
 function handleReport(report) {
 	// Each report needs to be treated by itself and thus we can't carry any references through
 	// If we do newer reports will update some state before we've processed it.
-	// Due to this we're doing Immuteable style design with the report
-	// Eventually I might make everything here Imuteable but for now just making
-	// each report run in sequence will do
+	// Due to this we're processing everything in an Immuteable style.
 	const enhancedState = enhanceState(report, state);
 	const progress = processor.process(enhancedState, state);
 	if (robot !== null) {
@@ -55,7 +53,6 @@ function handleReport(report) {
 	}
 }
 
-// clear the keys on exit?? Ctrl+C doesn't appear to send this event
 process.on('exit', code => {
 	console.log(`Process is exiting wih code: ${code}`);
 	processor.clearKeys(state);
@@ -73,7 +70,6 @@ function getChannelID(channelName) {
 	});
 }
 
-// interactive: true, tetrisGameId: versionId, tetrisShareCode: :code
 function goInteractive(versionCode, shareCode) {
 	return beam.request('PUT', `channels/${channelID}`, {body: {
 		interactive: true,
