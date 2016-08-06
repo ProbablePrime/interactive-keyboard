@@ -3,6 +3,7 @@ const Beam = require('beam-client-node');
 const Tetris = require('beam-interactive-node');
 const Packets = require('beam-interactive-node/dist/robot/packets').default;
 const Promise = require('bluebird');
+const cargo = require('async.cargo');
 
 const auth = require('./lib/auth.js');
 
@@ -32,7 +33,21 @@ const processor = new ControlsProcessor(config);
 processor.on('changed', report => {
 	widgets(report);
 });
-
+const limit = 10;
+const train = cargo((tasks, callback) => {
+	if (train.length() > limit) {
+		train.kill();
+	}
+	tasks.forEach(task => {
+		const progress = processor.process(task.current, task.previous);
+		if (robot !== null && robot.connect.socket.readyState === robot.connect.socket.OPEN) {
+			if (progress.tactile.length !== 0 || progress.joystick.length !== 0) {
+				robot.send(new Packets.ProgressUpdate(progress));
+			}
+		}
+	});
+	callback();
+}, limit);
 /**
  * Our report handler, entry point for data from beam
  * @param  {Object} report Follows the format specified in the latest tetris.proto file
@@ -42,12 +57,8 @@ function handleReport(report) {
 	// If we do newer reports will update some state before we've processed it.
 	// Due to this we're processing everything in an Immuteable style.
 	const enhancedState = enhanceState(report, state);
-	const progress = processor.process(enhancedState, state);
-	if (robot !== null) {
-		if (progress.tactile.length !== 0 || progress.joystick.length !== 0) {
-			robot.send(new Packets.ProgressUpdate(progress));
-		}
-	}
+
+	train.push({current: enhancedState, previous: state});
 	if (!report.tactile.length && report.users.active === 0) {
 		processor.clearKeys(state.tactiles);
 	}
