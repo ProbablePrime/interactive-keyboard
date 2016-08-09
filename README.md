@@ -33,7 +33,7 @@ OR
 }
 ```
 
-If you're using OAuth, the scopes required are `tetris:robot:self` and `channel:update:self`.
+If you're using OAuth, the scopes required are `interactive:robot:self` and `channel:update:self`.
 
 8. Choose a keyboard handler see the [Handlers](README.md#handlers) section, I reccomend `robot-js` or `robotjs`. Depending on your requirements you may need to use an alternative handler. Please read the section if you are unsure.
 9. Install your **Selected** handler with `npm install <handler>`
