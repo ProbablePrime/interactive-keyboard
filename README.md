@@ -13,7 +13,7 @@ A few 24/7 automated streams make heavy use of this.
 
 ## Setup
 1. Choose a keyboard controlled game.
-2. Make a Controls layout for that game in the Beam Controls Editor ensuring that both holding and frequency are checked for each key and that each key has something in `Keyboard Trigger`
+2. Make a Controls layout for that game in the Beam Controls Editor ensuring that both **holding and frequency** are checked for each key and that each key has something in `Keyboard Trigger`
 3. Clone this project
 5. Open a terminal/cmd to the cloned folder
 6. Run `npm install` to install dependancies
