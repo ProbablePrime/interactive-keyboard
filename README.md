@@ -1,10 +1,13 @@
-#This project is currently a work in progress and in a **Pre-Release** state. I would strongly suggest that **only developers** use it. I'm working on a more user friendly version but from the issue tracker you can see this is a long way off. 
 
 # Interactive Keyboard
 
+## :rotating_light: Warning :rotating_light:
+This project is currently a work in progress and in a **Pre-Release** state. 
+I would strongly suggest that **only developers** use it.
+
+I'm working on a more user friendly version but from the issue tracker you can see this is a long way off. 
+
 [Beam.pro](https://beam.pro) is a live streaming site that lets viewers interract through onscreen controls with the streamer's game. This project binds beam interactive controls to keyboard/mouse events on the system. This allows viewers to control aspects of/the whole game through beam. 
-
-
 
 A few 24/7 automated streams make heavy use of this.
 * https://beam.pro/Youplay 
@@ -19,15 +22,16 @@ A few 24/7 automated streams make heavy use of this.
 3. Clone this project
 5. Open a terminal/cmd to the cloned folder
 6. Run `npm install` to install dependancies
-7. In `config/` create a file called auth.json. It should contain your username and a password OR an OAuth token. To authenticate with Beam.
-Example:
+7. In `config/` create a file called auth.json. It should contain your username and a password **OR** an OAuth token. To authenticate with Beam.
+
+### Password Authentication
 ```
 {
     "username":"ProbablePrime",
     "password":"password"
 }
 ```
-OR
+### OAuth Token Authentication
 ```
 {
     "username":"ProbablePrime",
@@ -42,7 +46,7 @@ If you're using OAuth, the scopes required are `interactive:robot:self` and `cha
 10. Create a config file in config/ called <YOUR GAME>.json example `config/pokemon.json` Use [config/default.sample.json](config/default.sample.json) as a base/example. 
 11. Start your chosen game
 12. Go back to the terminal that's in the project's folder.
-12. Enter `node index.js ./config/<YOUR GAME>.json` in the terminal replacing yourgame with the config file you created.
+12. Enter `node index.js ./config/yourgame.json` in the terminal replacing yourgame with the config file you created.
 13. If you see "Connected to beam" you should be good to go.
 14. Test out your controls.
 15. If they do not work, see the [troubleshooting section ](README.md#troubleshooting)
@@ -59,8 +63,8 @@ Select the second radio button in the popup. Your version id is a number display
 
 Place these in your config file ensuring that the file is still valid json:
 ```
-    "version":<versionid>,
-    "code":"<sharecode>"
+    "version":versionid,
+    "code":"sharecode"
 ```
 
 # Handlers
@@ -117,7 +121,7 @@ In older games.
 ## Tactile Threshold
 Set the required percentage of users pushing a button for it to be depressed. Defaults to 0.1.
 ```
-tactileThreshhold: <Number>
+tactileThreshhold: a Number greater than 0
 ```
 
 # Troubleshooting
@@ -130,3 +134,4 @@ tactileThreshhold: <Number>
 * Try from another device. As this pushes your physical keys, its often impossible to test on the same machine as an infinite loop of key presses occurs. Summon a friend into your channel to help test :).
 * Try The key without a spark cost or cooldown.
 * Set your threshold to `0.1` in the config file
+* Nothing happens? exiting due to 0? This means your config file or auth file are incorrect.
