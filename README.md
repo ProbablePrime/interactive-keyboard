@@ -6,8 +6,6 @@
 
 # Interactive Keyboard
 
-I'm working on a more user friendly version but from the issue tracker you can see this is a long way off. 
-
 [Beam.pro](https://beam.pro) is a live streaming site that lets viewers interract through onscreen controls with the streamer's game. This project binds beam interactive controls to keyboard/mouse events on the system. This allows viewers to control aspects of/the whole game through beam. 
 
 A few 24/7 automated streams make heavy use of this.
@@ -125,14 +123,27 @@ Set the required percentage of users pushing a button for it to be depressed. De
 tactileThreshhold: a Number greater than 0
 ```
 
-# Troubleshooting
+# FAQ
 
-## Controls Do not work
+## Controls not Working
+While every effort is made to support as many games as possible. There are issues with certain titles. Ultimately some games are incompatible with fake inputs from code. They want real keyboard presses.
+
 * Check your keybindings for the game they should match the keys you are pressing. Press the actual keys on your keyboard to check.
 * Try refreshing the beam page.
 * Are you focused on/in your game. You must have your mouse inside the game for the keys to register.
 * Try `kbm-robot` as your handler some require this to interface with DirectInput/XInput.
 * Try from another device. As this pushes your physical keys, its often impossible to test on the same machine as an infinite loop of key presses occurs. Summon a friend into your channel to help test :).
 * Try The key without a spark cost or cooldown.
-* Set your threshold to `0.1` in the config file
-* Nothing happens? exiting due to 0? This means your config file or auth file are incorrect.
+* Set your `tactileThreshold` to `0.1` in the config file
+* Try another game
+* Try notepad
+
+## Cannot set channel to interactive with that game
+
+This usually means you have an incorrect share code, version code or just generally don't have access to that interactive game. Try a control layout you own.
+
+## Exiting due to zero
+This one's hard, try checking your config files, it shouldn't happen.
+
+
+
