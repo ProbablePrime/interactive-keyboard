@@ -2,8 +2,6 @@
 # :rotating_light: Warning :rotating_light:
 # This project is currently a work in progress and in a **Pre-Release** state. 
 
-# Only **Developers** should be using this.
-
 # If you would like help, please open a [Github Issue](https://github.com/ProbablePrime/interactive-keyboard/issues), do not contact Beam directly.
 
 # Interactive Keyboard
