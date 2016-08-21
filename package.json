@@ -24,7 +24,10 @@
     "robot-js": "^1.0.2"
   },
   "xo": {
-    "esnext": true
+    "esnext": true,
+    "rules": {
+      "xo/filename-case": 0
+    }
   },
   "devDependencies": {
     "xo": "^0.13.0"
