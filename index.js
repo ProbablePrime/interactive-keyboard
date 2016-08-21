@@ -65,11 +65,10 @@ function handleReport(report) {
 }
 
 process.on('exit', code => {
-	console.log(`Process is exiting wih code: ${code}`);
+	console.log(`Caught an exit event, cleaning up.`);
 	processor.clearKeys(state);
 });
 process.on('SIGINT', () => {
-	console.log('SIGINT');
 	processor.clearKeys(state);
 	process.exit();
 });
@@ -141,7 +140,8 @@ function validateConfig() {
 
 function setup() {
 	validateConfig();
-	console.log(`Using ${config.beam.username} with Version: ${config.version} && Code: ${config.code}`);
+	console.warn('This is a pre-release, open issues on the github: https://github.com/ProbablePrime/interactive-keyboard for help.');
+	console.log(`Using ${config.beam.username} with Version: ${config.version} & Code: ${config.code} & Handler: ${config.handler}`);
 	getChannelID(config.beam.username).then(result => {
 		if (result) {
 			go(result);
