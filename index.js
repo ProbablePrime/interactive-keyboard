@@ -19,7 +19,7 @@ const config = new Config(file);
 
 let state;
 let widgets;
-let channelID;
+let channelId;
 const beam = new Beam();
 let robot = null;
 
@@ -73,27 +73,29 @@ process.on('SIGINT', () => {
 	process.exit();
 });
 
-function getChannelID(channelName) {
+function getchannelId(channelName) {
 	return beam.request('GET', `channels/${channelName}`).then(res => {
-		channelID = res.body.id;
+		channelId = res.body.id;
 		return res.body.id;
 	});
 }
 
 function goInteractive(versionCode, shareCode) {
-	return beam.request('PUT', `channels/${channelID}`, {body: {
+	return beam.request('PUT', `channels/${channelId}`, {body: {
 		interactive: true,
-		tetrisGameId: versionCode,
-		tetrisShareCode: shareCode
+		interactiveGameId: versionCode,
+		interactiveShareCode: shareCode
 	}, json: true}).then(res => {
+		console.log(res.request.headers);
 		if (res.statusCode !== 200 || !res.body.interactive) {
+			console.log(res.body);
 			throw new Error('Couldn\'t set channel to interactive with that game.');
 		}
 	});
 }
 
 function checkInteractive() {
-	return beam.request('GET', `channels/${channelID}?fields=interactive`).then(res => {
+	return beam.request('GET', `channels/${channelId}?fields=interactive`).then(res => {
 		return res.body && res.body.interactive;
 	});
 }
@@ -142,11 +144,7 @@ function setup() {
 	validateConfig();
 	console.warn('This is a pre-release, open issues on the github: https://github.com/ProbablePrime/interactive-keyboard for help.');
 	console.log(`Using ${config.beam.username} with Version: ${config.version} & Code: ${config.code} & Handler: ${config.handler}`);
-	getChannelID(config.beam.username).then(result => {
-		if (result) {
-			go(result);
-		}
-	});
+	go();
 }
 
 function onInteractiveConnect(err) {
@@ -185,19 +183,18 @@ function launchInteractive(beam, id) {
 	});
 }
 
-function go(id) {
-	channelID = id;
+function go() {
 	auth(config.beam, beam)
-	.then(() => {
-		return goInteractive(config.version, config.code);
-	}).then(() => {
-		return getControls(config.version, config.code);
-	}).then(controls => {
-		return validateControls(controls);
-	}).then(controls => {
+	.then(res => {
+		channelId = res.channel.id;
+	})
+	.then(() => goInteractive(config.version, config.code))
+	.then(() => getControls(config.version, config.code))
+	.then(controls => validateControls(controls))
+	.then(controls => {
 		state = createState(controls);
 		return state;
-	}).then(launchInteractive.bind(this, beam, id))
+	}).then(() => launchInteractive(beam, channelId))
 	.catch(err => {
 		if (err.message !== undefined && err.message.body !== undefined) {
 			console.log(err);
