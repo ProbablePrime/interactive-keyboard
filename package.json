@@ -18,7 +18,7 @@
     "beam-interactive-node": "^0.3.1",
     "bluebird": "^3.4.1",
     "cli-color": "^1.1.0",
-    "clui": "^0.3.1",
+    "clui": "git://github.com/metaa/clui",
     "deep-equal": "^1.0.1",
     "keycode": "^2.1.0",
     "robot-js": "^1.0.2"
