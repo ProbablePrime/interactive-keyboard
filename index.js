@@ -1,6 +1,6 @@
 'use strict';
 const Beam = require('beam-client-node');
-const Tetris = require('beam-interactive-node');
+const Interactive = require('beam-interactive-node');
 const Packets = require('beam-interactive-node/dist/robot/packets').default;
 const Promise = require('bluebird');
 const cargo = require('async.cargo');
@@ -116,7 +116,7 @@ function validateControls(controls) {
 }
 
 function getControls(version, code) {
-	return beam.request('GET', `tetris/versions/${version}?code=${code}`)
+	return beam.request('GET', `interactive/versions/${version}?code=${code}`)
 	.then(res => {
 		if (!res.body.controls) {
 			throw new Error('Incorrect version id or share code in your config or no control layout saved for that version.');
@@ -171,7 +171,7 @@ function performRobotHandshake(robot) {
 function launchInteractive(beam, id) {
 	return beam.game.join(id).then(details => {
 		console.log('Authenticated, Spinning up Interactive Connection');
-		robot = new Tetris.Robot({
+		robot = new Interactive.Robot({
 			remote: details.body.address,
 			key: details.body.key,
 			channel: id
