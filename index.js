@@ -86,9 +86,7 @@ function goInteractive(versionCode, shareCode) {
 		interactiveGameId: versionCode,
 		interactiveShareCode: shareCode
 	}, json: true}).then(res => {
-		console.log(res.request.headers);
 		if (res.statusCode !== 200 || !res.body.interactive) {
-			console.log(res.body);
 			throw new Error('Couldn\'t set channel to interactive with that game.');
 		}
 	});
