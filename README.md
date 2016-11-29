@@ -1,9 +1,3 @@
-
-# :rotating_light: Warning :rotating_light:
-# This project is currently a work in progress and in a **Pre-Release** state. 
-
-# If you would like help, please open a [Github Issue](https://github.com/ProbablePrime/interactive-keyboard/issues), do not contact Beam directly.
-
 # Interactive Keyboard
 
 [Beam.pro](https://beam.pro) is a live streaming site that lets viewers interract through onscreen controls with the streamer's game. This project binds beam interactive controls to keyboard/mouse events on the system. This allows viewers to control aspects of/the whole game through beam. 
