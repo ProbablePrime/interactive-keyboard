@@ -33,6 +33,9 @@ A few 24/7 automated streams make heavy use of this.
 ```
 
 If you're using OAuth, the scopes required on the OAuth Token are `interactive:robot:self` and `channel:update:self`.
+
+Next:
+
 10. Create a config file in config/ called <YOUR GAME>.json for example `config/pokemon.json`. You can use [config/default.sample.json](config/default.sample.json) as a base/example to work from.
 11. Start your chosen game, preferably in windowed mode.
 12. Go back to a terminal/cmd that's in this project's folder.
