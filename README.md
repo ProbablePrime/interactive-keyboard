@@ -7,15 +7,15 @@ A few 24/7 automated streams make heavy use of this.
 * https://beam.pro/merlin
 
 ## Requirements
-* Node >= 5
+* Node.js >= 5
 
 ## Setup
 1. Choose a keyboard controlled game.
-2. Make a Controls layout for that game in the Beam Controls Editor ensuring that both **holding and frequency** are checked for each key and that each key has something in `Keyboard Trigger`
-3. Clone this project
-5. Open a terminal/cmd to the cloned folder
+2. Make a Controls layout for that game in the Beam Controls Editor ensuring that both **holding and frequency** are checked under the analysis section for each Control and that each key has a valid key code in `Keyboard Trigger`
+3. Clone this project down to your pc.
+5. Open a terminal/cmd to the root folder of your cloned copy.
 6. Run `npm install` to install dependancies
-7. In `config/` create a file called auth.json. It should contain your username and a password **OR** an OAuth token. To authenticate with Beam.
+7. In the `config/` folder create a file called auth.json. It should contain your username and a password **OR** an OAuth token. Tthis is used to authenticate with Beam.
 
 ### Password Authentication
 ```
@@ -32,14 +32,11 @@ A few 24/7 automated streams make heavy use of this.
 }
 ```
 
-If you're using OAuth, the scopes required are `interactive:robot:self` and `channel:update:self`.
-
-8. Choose a keyboard handler see the [Handlers](README.md#handlers) section, I reccomend `robot-js` or `robotjs`. Depending on your requirements you may need to use an alternative handler. Please read the section if you are unsure.
-9. Install your **Selected** handler with `npm install <handler>`
-10. Create a config file in config/ called <YOUR GAME>.json example `config/pokemon.json` Use [config/default.sample.json](config/default.sample.json) as a base/example. 
-11. Start your chosen game
-12. Go back to the terminal that's in the project's folder.
-12. Enter `node index.js ./config/yourgame.json` in the terminal replacing yourgame with the config file you created.
+If you're using OAuth, the scopes required on the OAuth Token are `interactive:robot:self` and `channel:update:self`.
+10. Create a config file in config/ called <YOUR GAME>.json for example `config/pokemon.json`. You can use [config/default.sample.json](config/default.sample.json) as a base/example to work from.
+11. Start your chosen game, preferably in windowed mode.
+12. Go back to a terminal/cmd that's in this project's folder.
+12. Enter `node index.js ./config/yourgame.json` in the terminal replacing yourgame with the name of the config file you created.
 13. If you see "Connected to beam" you should be good to go.
 14. Test out your controls.
 15. If they do not work, see the [troubleshooting section ](README.md#troubleshooting)
