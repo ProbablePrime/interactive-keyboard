@@ -6,8 +6,13 @@ A few 24/7 automated streams make heavy use of this.
 * https://beam.pro/Youplay 
 * https://beam.pro/merlin
 
+This project is currently in a *pre-release state*. There are undocumented features and [bugs](https://github.com/ProbablePrime/interactive-keyboard/issues). That need to be solved.
+
+## Support
+Please open an issue directly on this project for support.
+
 ## Requirements
-* Node.js >= 5
+* Node.js >= 6
 
 ## Setup
 1. Choose a keyboard controlled game.
