@@ -1,0 +1,10 @@
+{
+    "version":582,
+    "code":"r8rdivrk",
+    "threshold":0.5,
+    "handler": "robotjs",
+    "remap":false,
+    "remapTable": {
+        "J":"SPACE"
+    }
+}

@@ -99,14 +99,14 @@ function validateControls(controls) {
 		return (tactile.analysis.holding && tactile.analysis.frequency);
 	});
 	if (!analysis) {
-		throw new Error("Buttons require holding and frequency to be checked for analysis");
+		//throw new Error("Buttons require holding and frequency to be checked for analysis");
 	}
 
 	var keyCodes = controls.tactiles.every(function(tactile){
 		return (tactile.key >= 8 && tactile.key < 300);
 	});
 	if (!keyCodes) {
-		throw new Error("Some invalid keycodes were found in your beam controls. Check them at keycode.info");
+		//throw new Error("Some invalid keycodes were found in your beam controls. Check them at keycode.info");
 	}
 	return controls;
 }

@@ -1,0 +1,9 @@
+{
+    "version":678,
+    "code":"742xctbe",
+    "threshold":0.5,
+    "handler": "kbm-robot",
+    "remap":false,
+    "remapTable": {},
+    "widgets":false
+}
