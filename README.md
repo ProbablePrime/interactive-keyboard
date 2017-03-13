@@ -6,7 +6,9 @@ A few 24/7 automated streams make heavy use of this.
 * https://beam.pro/Youplay 
 * https://beam.pro/merlin
 
-This project is currently in a *pre-release state*. There are undocumented features and [bugs](https://github.com/ProbablePrime/interactive-keyboard/issues). That need to be solved.
+This project is currently in a *pre-release state*. There are undocumented features and [bugs](https://github.com/ProbablePrime/interactive-keyboard/issues). That need to be solved before it is in a stable condition.
+
+Until this project is in a stable condition I do not reccomend submitting any integrations that use this to the interactive store. 
 
 ## Support
 Please open an issue directly on this project for support.
